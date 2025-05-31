@@ -98,7 +98,7 @@ export const Signin = async (req:Request,res:Response)=>{
             sameSite: 'strict', // Helps prevent CSRF attacks
             maxAge: 30 * 24 * 60 * 60 * 1000, // Cookie expires in 30 day
         }).json({
-            message: "User logged in successfully",
+            message: "User Sign in successfully",
             success: true,
             user: {
                 id: user._id,
