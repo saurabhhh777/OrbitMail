@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
+import { Request, response, Response } from 'express';
 import emailSentReceiveModel from '../models/emailSentReceive.model';
+import userDomainModel from '../models/userDomain.model';
 
 
 interface MailRequestBody {
@@ -36,8 +37,72 @@ interface GetMailResponseBody {
 }
 
 
+export const addDomain = (req:Request,res:Response):Promise<any>=>{
+    try {
+        const {domain} = req.body;
+        if (!domain) {
+            return res.status(400).json({
+                message: "Prefix and domain are required",
+                success: false,
+            });
+        }    
+
+        const userId = req.user; // Assuming user ID is set in the request by userAuth middleware
+        if  (!userId) {
+            return res.status(401).json({
+                message: "Unauthorized, please login",
+                success: false,
+            });
+        }
+
+        const saveEamil = new userDomainModel({
+            domain: domain,
+            userId: userId // Assuming req.user contains the user ID from authentication middleware
+        });
+
+
+        if(!saveEamil){
+            return res.status(400).json({
+                message: "Domain not saved",
+                success: false,
+            });
+        }
+
+        saveEamil.save()
+            .then(() => {
+                return res.status(200).json({
+                    message: "Domain saved successfully",
+                    success: true,
+                });
+            })
+            .catch((error) => {
+                console.error("Error saving domain:", error);
+                return res.status(500).json({
+                    message: "Internal Server Error",
+                    success: false,
+                });
+            });
+
+
+        
+
+
+        
+    } catch (error) {
+        console.log("Server error:", error);
+        res.status(500).json({
+            message: "Internal Server Error",
+            success: false,
+        });
+    }
+}
+
+
+
+
+
 //This will sendEmail to the other person 
-export const sendEmail = (req:Request<{}, {}, MailRequestBody>,res:Response<MailResponseBody>)=>{
+export const sendEmail = (req:Request<{}, {}, MailRequestBody>,res:Response<MailResponseBody>):Promise<any>=>{
     try {
 
         const { to, subject, text, } = req.body;
@@ -74,7 +139,7 @@ export const sendEmail = (req:Request<{}, {}, MailRequestBody>,res:Response<Mail
 
 
 //will sent all the email on the base of the namme to the frotend 
-export const getMail = async (req: Request, res: Response<GetMailResponseBody>) => {
+export const getMail = async (req: Request, res: Response<GetMailResponseBody>):Promise<any> => {
     try {
         const userEmail = req.body.email;
 
