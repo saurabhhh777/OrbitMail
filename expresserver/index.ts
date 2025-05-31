@@ -4,11 +4,15 @@ import dotenv from 'dotenv';
 import userRouter from "./routes/user.route";
 import adminRouter from "./routes/admin.route";
 import emailRouter from "./routes/email.route";
+import connectDB from './config/db';
 
 
 dotenv.config();
 
 const app = express();
+
+// Connect to the database
+connectDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
