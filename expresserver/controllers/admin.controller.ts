@@ -1,66 +1,58 @@
 import { Request, Response } from 'express';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import userModel from '../models/user.model'; // Assuming you have a User model defined
+import admin from '../models/admin.model';
 
-
-export const Signup = async (req:Request, res:Response) => {
+export const adminSignup = async (req: Request, res: Response) => {
     try {
-
-        const {name, email,password} = req.body;
+        const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: "All fields are required",
-                success:false    
+                success: false
             });
         }
 
-        const user = await userModel.findOne({ email });
+        const existingAdmin = await admin.findOne({ email });
 
-        if (user) {
+        if (existingAdmin) {
             return res.status(400).json({
-                message: "User already exists",
+                message: "Admin already exists",
                 success: false,
             });
         }
 
-        const doublePassword = bcryptjs.hashSync(password, 10);
+        const hashedPassword = bcryptjs.hashSync(password, 10);
 
-        const newUser = new userModel({
+        const newAdmin = new admin({
             name,
             email,
-            password: doublePassword,
+            password: hashedPassword,
         });
 
-
-        await newUser.save();
-        
+        await newAdmin.save();
 
         return res.status(201).json({
-            message:"User registered successfully",
+            message: "Admin registered successfully",
             success: true,
-            user: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
+            admin: {
+                id: newAdmin._id,
+                name: newAdmin.name,
+                email: newAdmin.email,
             }
-
         });
-        
+
     } catch (error) {
         console.log("Server error:", error);
-        res.status(500).json({ 
+        res.status(500).json({
             message: "Internal Server Error",
             success: false,
         });
-
     }
-
 }
 
-
-export const Signin = async (req:Request,res:Response)=>{
+export const adminSignin = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -70,17 +62,17 @@ export const Signin = async (req:Request,res:Response)=>{
             });
         }
 
-        const user = await userModel.findOne({ email });
-        if (!user) {
+        const adminUser = await admin.findOne({ email });
+        if (!adminUser) {
             return res.status(400).json({
-                message: "User not found",
+                message: "Admin not found",
                 success: false,
             });
         }
 
-        const isPasswordValid = bcryptjs.compareSync(password, user.password);
+        const isPasswordValid = bcryptjs.compareSync(password, adminUser.password);
 
-        if( !isPasswordValid) {
+        if (!isPasswordValid) {
             return res.status(400).json({
                 message: "Invalid password",
                 success: false,
@@ -88,54 +80,48 @@ export const Signin = async (req:Request,res:Response)=>{
         }
 
         const token = jwt.sign({
-            id: user._id,
-        }, process.env.JWT_SECRET as string, );
+            id: adminUser._id,
+            role: 'admin'
+        }, process.env.JWT_SECRET as string);
 
-
-        return res.status(200).cookie("token",token,{
+        return res.status(200).cookie("adminToken", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'strict', // Helps prevent CSRF attacks
-            maxAge: 30 * 24 * 60 * 60 * 1000, // Cookie expires in 30 day
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         }).json({
-            message: "User logged in successfully",
+            message: "Admin logged in successfully",
             success: true,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
+            admin: {
+                id: adminUser._id,
+                name: adminUser.name,
+                email: adminUser.email,
             }
         });
-        
-    } catch (error) {
-        console.log("Server error:", error);
-        res.status(500).json({
-            message:"Internal Server Error",
-            success: false,
-        });
-    }
-}
 
-
-export const Signout = async (req:Request, res:Response) => {
-    try {
-
-        return res.status(200).cookie("token", "").json({
-            message: "User logged out successfully",
-            success: true,
-        });
-        
     } catch (error) {
         console.log("Server error:", error);
         res.status(500).json({
             message: "Internal Server Error",
             success: false,
         });
-
     }
-
 }
 
+export const adminSignout = async (req: Request, res: Response) => {
+    try {
+        return res.status(200).cookie("adminToken", "").json({
+            message: "Admin logged out successfully",
+            success: true,
+        });
+    } catch (error) {
+        console.log("Server error:", error);
+        res.status(500).json({
+            message: "Internal Server Error",
+            success: false,
+        });
+    }
+}
 
 export const createEmail = async (req:Request, res:Response) => {
     try {
