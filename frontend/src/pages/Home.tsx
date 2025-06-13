@@ -8,10 +8,10 @@ import Footer from "../components/Footer";
 export default function HomePage() {
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <HeroSection />
       <FeaturesSection />
-      <CTASection />
+      {/* <CTASection /> */}
       <FAQSection />
       <Footer />
     </>
