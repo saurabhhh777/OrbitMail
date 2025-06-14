@@ -1,4 +1,10 @@
+import { userAuthStore } from "../../store/userAuthStore";
+
+
 export default function FeaturesSection() {
+
+  const { isDarkMode, toggleDarkMode } = userAuthStore();
+
   const features = [
     {
       title: "Custom Domain Email",
@@ -55,7 +61,7 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section className="min-h-screen bg-gray-100 py-20 px-6">
+    <section className="min-h-screen bg-gray-100 py-20 px-6" id="features">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}

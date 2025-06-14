@@ -3,8 +3,8 @@ import Logo from "../assets/android-chrome-192x192.png";
 
 export default function Footer() {
   return (
-    <footer className="bg-white text-black px-6 md:px-12 py-16 border-t-2 border-black">
-      <div className="max-w-7xl mx-auto">
+    <footer className="text-black px-6 md:px-12 py-16 border-black bg-[#f3f4f6] rounded-2xl">
+      <div className="max-w-7xl mx-auto bg-[#f3f4f6] rounded-2xl">
         <div className="grid md:grid-cols-5 gap-10">
           {/* Branding & Social */}
           <div className="md:col-span-2">
@@ -68,7 +68,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="/features"
+                  href="#features"
                   className="text-gray-600 hover:text-black hover:underline transition-colors"
                 >
                   Features
@@ -92,7 +92,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="/faq"
+                  href="#faq"
                   className="text-gray-600 hover:text-black hover:underline transition-colors"
                 >
                   FAQs
@@ -105,14 +105,6 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-black mb-4 text-lg">Resources</h4>
             <ul className="space-y-3">
-              <li>
-                <a
-                  href="/status"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
-                >
-                  System Status
-                </a>
-              </li>
               <li>
                 <a
                   href="/blog"
@@ -189,31 +181,11 @@ export default function Footer() {
         </div>
 
         {/* Bottom Line */}
-        <div className="mt-16 border-t-2 border-black pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="mt-16  border-black pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-600 text-sm">
             © {new Date().getFullYear()} OrbitMail. All rights reserved.
           </p>
 
-          <div className="flex gap-6 text-sm">
-            <a
-              href="/cookies"
-              className="text-gray-600 hover:text-black transition-colors"
-            >
-              Cookie Policy
-            </a>
-            <a
-              href="/dmca"
-              className="text-gray-600 hover:text-black transition-colors"
-            >
-              DMCA
-            </a>
-            <a
-              href="/gdpr"
-              className="text-gray-600 hover:text-black transition-colors"
-            >
-              GDPR
-            </a>
-          </div>
         </div>
       </div>
     </footer>

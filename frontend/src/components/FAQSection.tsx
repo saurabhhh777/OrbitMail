@@ -36,7 +36,7 @@ export default function FAQSection() {
     setActiveIndex(activeIndex === index ? null : index);
 
   return (
-    <section className="bg-gray-50 py-20 px-6">
+    <section className="bg-gray-50 py-20 px-6" id="faq">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-16">
           <p className="text-sm font-medium text-gray-500 mb-4 tracking-wider uppercase">
