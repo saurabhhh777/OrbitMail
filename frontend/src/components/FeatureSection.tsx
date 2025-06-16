@@ -1,9 +1,5 @@
-import { userAuthStore } from "../../store/userAuthStore";
-
 
 export default function FeaturesSection() {
-
-  const { isDarkMode, toggleDarkMode } = userAuthStore();
 
   const features = [
     {
