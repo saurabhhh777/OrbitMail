@@ -1,15 +1,62 @@
 import { Mail, Lock, Eye, EyeOff, Facebook, Apple } from 'lucide-react';
 import { useState } from 'react';
 import { FcGoogle } from "react-icons/fc";
-import {Link} from "react-router-dom";
+import {Link,useNavigate} from "react-router-dom";
+import { userAuthStore } from '../../store/userAuthStore';
+import {Toaster,toast} from "react-hot-toast";
 
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const {signup} = userAuthStore();
+  const {isLoading,setIsLoading} = useState(false);
+  const navigate = useNavigate();
+  
+
+
+  const [formdata,setFormdata] = useState({
+    email:"",
+    password:"",
+    confirmpassord:""
+  });
+
+
+
+  const handleChange = (e)=>{
+    const {name,value} = e.target;
+    setFormdata((data)=>({...data,[name]:value}));
+  }
+
+  const handleSignup = async()=>{
+    try {
+      setIsLoading(true);
+      const res = await signup(formdata);
+      
+      if(res){
+        toast.success("Signup Successfully");
+        navigate("/admin");
+
+      }
+      else{
+        toast.error("Invalid Cread");
+      }
+      
+    } catch (error) {
+      toast.error("Error Occured");
+    }
+    finally{
+      setIsLoading(false);
+    }
+
+  }
+
 
   return (
     <div className="flex min-h-screen bg-gray-50 justify-center items-center">
+
+      <Toaster/>
+
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center">
         {/* Logo/Icon placeholder */}
         <div className="flex flex-col items-center mb-6">
@@ -27,6 +74,9 @@ const Signup = () => {
           </div>
           <input
             type="email"
+            name="email"
+            value={formdata.email}
+            onChange={handleChange}
             placeholder="Email"
             className="block w-full pl-10 pr-3 py-2 rounded-md border border-gray-200 bg-gray-100 focus:outline-none focus:border-gray-400 text-gray-900 text-sm"
           />
@@ -40,6 +90,9 @@ const Signup = () => {
           <input
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
+            name="password"
+            value={formdata.password}
+            onChange={handleChange}
             className="block w-full pl-10 pr-10 py-2 rounded-md border border-gray-200 bg-gray-100 focus:outline-none focus:border-gray-400 text-gray-900 text-sm"
           />
           <button
@@ -74,6 +127,7 @@ const Signup = () => {
 
         {/* Sign Up Button */}
         <button
+          onClick={handleSignup}
           className="w-full bg-black text-white rounded-md py-2 text-[15px] font-semibold mt-2 mb-4 hover:bg-gray-900 transition"
         >
           Sign Up

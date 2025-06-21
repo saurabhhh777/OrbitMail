@@ -3,9 +3,12 @@
 import { Search, Mail, HelpCircle, User, Shield } from "lucide-react";
 import FAQSection from "../components/FAQSection";
 import Footer from "../components/Footer";
+import Navbar from "../components/Navbar";
 
 export default function Support() {
   return (
+    <div>
+      <Navbar/>
     <div className="min-h-screen bg-gray-50 text-gray-800">
       {/* Header */}
       <header className="py-10 text-center bg-white shadow font-poppins">
@@ -20,7 +23,7 @@ export default function Support() {
             type="text"
             placeholder="Search for help articles..."
             className="w-full px-5 py-3 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+            />
           <Search className="absolute right-4 top-3 text-gray-400" />
         </div>
       </div>
@@ -51,7 +54,7 @@ export default function Support() {
         <a
           href="mailto:support@orbitmail.fun"
           className="inline-block bg-blue-600 text-white px-6 py-3 rounded-full font-medium hover:bg-blue-700 transition"
-        >
+          >
           Contact Support
         </a>
       </section>
@@ -59,6 +62,7 @@ export default function Support() {
       {/* Footer */}
         <Footer/>
 
+    </div>
     </div>
   );
 }
