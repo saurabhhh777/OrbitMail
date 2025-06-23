@@ -7,9 +7,9 @@ import userModel from '../models/user.model'; // Assuming you have a User model 
 export const Signup = async (req:Request, res:Response) => {
     try {
 
-        const {name, email,password} = req.body;
+        const {email,password,confirmpassword} = req.body;
 
-        if (!name || !email || !password) {
+        if ( !email || !password || !confirmpassword) {
             return res.status(400).json({ 
                 message: "All fields are required",
                 success:false    
@@ -28,7 +28,6 @@ export const Signup = async (req:Request, res:Response) => {
         const doublePassword = bcryptjs.hashSync(password, 10);
 
         const newUser = new userModel({
-            name,
             email,
             password: doublePassword,
         });
@@ -42,7 +41,6 @@ export const Signup = async (req:Request, res:Response) => {
             success: true,
             user: {
                 id: newUser._id,
-                name: newUser.name,
                 email: newUser.email,
             }
 
@@ -102,7 +100,6 @@ export const Signin = async (req:Request,res:Response)=>{
             success: true,
             user: {
                 id: user._id,
-                name: user.name,
                 email: user.email,
             }
         });

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import userRouter from "./routes/user.route";
 import adminRouter from "./routes/admin.route";
 import emailRouter from "./routes/email.route";
+import userDomainRouter from "./routes/userDomain.route";
 import connectDB from './config/db';
 
 
@@ -28,11 +29,17 @@ app.use(cors({
 //user route 
 app.use("/api/v1/user", userRouter);
 
+
 //admin route
 app.use("/api/v1/admin", adminRouter);
 
+
 //email route 
 app.use("/api/v1/email", emailRouter);
+
+
+//userDomain Route 
+app.use("/api/v1/userdomain", userDomainRouter);
 
 
 

@@ -48,72 +48,10 @@ interface GetMailResponseBody {
     }>;
 }
 
-export const addDomain = async (req: AuthenticatedRequest, res: Response) => {
+export const sendEmail = async (req: Request, res: Response) => {
     try {
-        const { domain, prefix, fullEmail, password } = req.body;
-
-        if (!domain || !prefix || !fullEmail || !password) {
-            return res.status(400).json({
-                message: "Domain, prefix, fullEmail, and password are required",
-                success: false,
-            });
-        }
-
-        const userId = req.user.id;
-        if (!userId) {
-            return res.status(401).json({
-                message: "Unauthorized, please login",
-                success: false,
-            });
-        }
-
-        // Check if user already has 5 email addresses
-        const existingDomain = await userDomainModel.findOne({ userId });
-        if (existingDomain && existingDomain.emails.length >= 5) {
-            return res.status(400).json({
-                message: "Maximum limit of 5 email addresses reached",
-                success: false,
-            });
-        }
-
-        const passwordHash = await bcryptjs.hash(password, 10);
-
-        const newEmail = {
-            prefix,
-            fullEmail,
-            passwordHash
-        };
-
-        // Update or create domain
-        const updatedDomain = await userDomainModel.findOneAndUpdate(
-            { userId },
-            {
-                $push: { emails: newEmail },
-                domain,
-                isVerified: false
-            },
-            { upsert: true, new: true }
-        );
-
-        return res.status(200).json({
-            message: "Domain and email added successfully",
-            success: true,
-            domain: updatedDomain
-        });
-
-    } catch (error) {
-        console.log("Server error:", error);
-        res.status(500).json({
-            message: "Internal Server Error",
-            success: false,
-        });
-    }
-}
-
-export const sendEmail = async (req: AuthenticatedRequest, res: Response<MailResponseBody>) => {
-    try {
-        const { to, subject, text, html } = req.body;
-        const from = req.user.email;
+        const { to, subject, text, html,from } = req.body;
+        
 
         if (!to || !subject || !text || !from) {
             return res.status(400).json({
@@ -153,9 +91,9 @@ export const sendEmail = async (req: AuthenticatedRequest, res: Response<MailRes
     }
 }
 
-export const getMail = async (req: AuthenticatedRequest, res: Response<GetMailResponseBody>) => {
+export const getMail = async (req:Request, res: Response) => {
     try {
-        const userEmail = req.user.email;
+        const userEmail = req.body.email;
 
         if (!userEmail) {
             return res.status(400).json({

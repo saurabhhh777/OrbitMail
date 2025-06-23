@@ -1,18 +1,16 @@
-import express, { Request, RequestHandler, Response } from "express";
+import express, { RequestHandler} from "express";
 
 const router = express.Router();
 
-import { sendEmail,getMail,addDomain } from "../controllers/email.controller";
+import { sendEmail,getMail } from "../controllers/email.controller";
 import {userAuth} from "../middlewares/userAuth.middleware";
 
 
 
-//saving the email to the database
-router.route("/addDomain").post(userAuth, addDomain );
 
-router.route("/sendEmail").post(userAuth ,sendEmail);
+router.post("/sendEmail",userAuth,sendEmail as RequestHandler);
 
-router.route("/getMail").get(getMail);
+router.get("/getMail" ,userAuth, getMail as RequestHandler);
 
 
 
