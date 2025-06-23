@@ -11,6 +11,7 @@ import Support from './pages/Support';
 import Blog from "./pages/Blog";
 import Roadmap from './pages/Roadmap';
 import ErrorPage from './pages/ErrorPage';
+import Dashboard from './pages/Dashboard';
 
 
 const App = () => {
@@ -21,6 +22,8 @@ const App = () => {
 
         <Route path="/signin" element={<Signin/>}/>
         <Route path="/signup" element={<Signup/>}/>
+
+        <Route path="/dashboard" element={<Dashboard/>}/>
 
         <Route path="/solution" element={<Solution/>}/>
         <Route path="/pricing" element={<Pricing/>}/>

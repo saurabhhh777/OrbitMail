@@ -119,6 +119,19 @@ export const userAuthStore = create<AuthStore>()(
           console.log(axiosError.response?.data || axiosError.message);
         }
       },
+      verifyDomain: async ()=>{
+        try {
+          await axiosInstance.post("/api/")
+
+
+        } catch (error) {
+          console.log(error || "error occure");
+        }
+
+      }
+
+
+
     }),
     {
       name: "user-auth-store", // Key in localStorage

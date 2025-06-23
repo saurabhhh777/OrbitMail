@@ -1,5 +1,6 @@
 import { userAuthStore } from "../../store/userAuthStore";
 import Navbar from "./Navbar";
+import {Link} from "react-router-dom";
 
 
 export default function HeroSection() {
@@ -24,9 +25,11 @@ export default function HeroSection() {
             Create, manage, and scale professional email addresses on your
             custom domain - All in one workspace.
           </p>
+          <Link to="/dashboard">
           <button className="bg-black dark:bg-white text-white dark:text-black px-8 py-3 rounded-lg hover:opacity-90 transition-colors font-medium text-lg">
             Get Started
           </button>
+          </Link>
         </div>
 
         {/* Workflow Visualization */}

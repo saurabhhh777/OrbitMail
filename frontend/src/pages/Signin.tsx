@@ -23,10 +23,10 @@ const Signin = () => {
     }));
   };
 
-  const handleSignin = async () => {
+  const handleSignin = async() => {
     try {
       setIsLoading(true);
-      const res = await Signin(formdata);
+      const res = await signin(formdata);
 
       if (res) {
         toast.success("Login Successfully");
@@ -34,8 +34,14 @@ const Signin = () => {
       } else {
         toast.error("Invalid Credentials");
       }
-    } catch (error) {
-      toast.error("Error occurred");
+    } catch(error) {
+      toast.error(
+        typeof error === "string"
+          ? error
+          : error instanceof Error && error.message
+          ? error.message
+          : "Error occurred"
+      );
     } finally {
       setIsLoading(false);
     }

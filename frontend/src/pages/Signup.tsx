@@ -10,7 +10,7 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {signup} = userAuthStore();
-  const {isLoading,setIsLoading} = useState(false);
+  const [isLoading,setIsLoading] = useState(false);
   const navigate = useNavigate();
   
 
@@ -18,7 +18,7 @@ const Signup = () => {
   const [formdata,setFormdata] = useState({
     email:"",
     password:"",
-    confirmpassord:""
+    confirmpassword:""
   });
 
 
@@ -38,12 +38,15 @@ const Signup = () => {
         navigate("/admin");
 
       }
-      else{
-        toast.error("Invalid Cread");
-      }
       
     } catch (error) {
-      toast.error("Error Occured");
+      toast.error(
+        typeof error === "string"
+          ? error
+          : error instanceof Error && error.message
+          ? error.message
+          : "Error Occured"
+      );
     }
     finally{
       setIsLoading(false);
@@ -112,6 +115,9 @@ const Signup = () => {
           </div>
           <input
             type={showConfirmPassword ? 'text' : 'password'}
+            name="confirmpassword"
+            value={formdata.confirmpassword}
+            onChange={handleChange}
             placeholder="Confirm Password"
             className="block w-full pl-10 pr-10 py-2 rounded-md border border-gray-200 bg-gray-100 focus:outline-none focus:border-gray-400 text-gray-900 text-sm"
           />
