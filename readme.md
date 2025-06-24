@@ -22,15 +22,5 @@ OrbitMail is a powerful, easy-to-use platform that lets users create and manage 
 
 
 ## ScreenShort
-![Image](https://github.com/user-attachments/assets/246ee6d6-6c18-445a-8d06-0959b6f60131)
 
-![Image](https://github.com/user-attachments/assets/a3e7a526-a08c-4196-ba6f-396f793322b3)
-
-![Image](https://github.com/user-attachments/assets/627d5581-74ca-4bbf-ae9a-215675e2ee12)
-
-![Image](https://github.com/user-attachments/assets/987c0411-9d76-4da1-b8b7-5e65c613c835)
-
-![Image](https://github.com/user-attachments/assets/a6dcf8dc-5f5f-4492-b4e1-cf491f3997a6)
-
-![Image](https://github.com/user-attachments/assets/8e480431-41f5-45de-85fa-c2b9a7ef845c)
 

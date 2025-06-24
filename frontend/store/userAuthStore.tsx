@@ -101,6 +101,10 @@ export const userAuthStore = create<AuthStore>()(
         try {
           set({ isLogined: true });
           const res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signin", data);
+          
+          console.log("from State side");
+          console.log(res);
+
           set({ Authuser: res.data.data });
           return res.data.data;
         } catch (error) {

@@ -27,25 +27,33 @@ const Signin = () => {
   const handleSignin = async () => {
     try {
       setIsLoading(true);
+      console.log('Form data before signin:', formdata); // Debug: Check form data
+
+      // Debug: Check if signin function is accessible
+      console.log('Signin function:', signin);
+      if (!signin) {
+        toast.error("Signin function is not available");
+        return;
+      }
 
       const res = await signin(formdata);
-      console.log("Signin response:", res);
+      console.log('Response from signin:', res); // Debug: Check response
 
-      // ✅ Check if backend returned a user or token
-      if (res){
+      if (res && (res._id || res.data?._id)) {
         toast.success("Login Successful");
-        navigate("/admin");
+        navigate("/dashboard");
       } else {
-        toast.error("Invalid Credentials");
+        toast.error("Invalid response from server. Please try again.");
       }
 
     } catch (error) {
+      console.error('Error during signin:', error);
       toast.error(
         typeof error === "string"
           ? error
           : error instanceof Error && error.message
             ? error.message
-            : "Login failed"
+            : "Login failed. Please check your credentials and try again."
       );
     } finally {
       setIsLoading(false);
