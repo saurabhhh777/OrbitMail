@@ -30,10 +30,16 @@ const Signup = () => {
 
   const handleSignup = async()=>{
     try {
+    
       setIsLoading(true);
       const res = await signup(formdata);
       
+      console.log(res);
+
       if(res){
+
+        console.log("handle Signup");
+
         toast.success("Signup Successfully");
         navigate("/admin");
 

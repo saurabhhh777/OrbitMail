@@ -9,13 +9,17 @@ interface User {
   _id: string;
   name: string;
   email: string;
-  // Add any other user fields you use
+  // Add other user fields as needed
 }
 
 interface AuthData {
   email: string;
   password: string;
-  name?: string;
+}
+
+interface DomainData {
+  domain: string;
+  // Add other fields if required for the domain
 }
 
 interface ApiResponse<T> {
@@ -40,6 +44,7 @@ interface AuthStore {
   signup: (data: AuthData) => Promise<User>;
   signin: (data: AuthData) => Promise<User>;
   logout: () => Promise<void>;
+  addDomain: (data: DomainData) => Promise<void>;
 }
 
 // -------------------- Store --------------------
@@ -67,7 +72,7 @@ export const userAuthStore = create<AuthStore>()(
           set({ Authuser: res.data.data });
         } catch (error) {
           const axiosError = error as AxiosError;
-          console.log(axiosError.response?.data || axiosError.message);
+          console.error(axiosError.response?.data || axiosError.message);
           set({ Authuser: null });
         } finally {
           set({ isCheckingAuth: false });
@@ -75,16 +80,17 @@ export const userAuthStore = create<AuthStore>()(
       },
 
       signup: async (data: AuthData) => {
-        let res;
-        set({ isSignedUp: true });
-
         try {
-          res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signup", data);
+
+          console.log("from the signup state:")
+
+          set({ isSignedUp: true });
+          const res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signup", data);
           set({ Authuser: res.data.data });
           return res.data.data;
         } catch (error) {
           const axiosError = error as AxiosError;
-          console.log(axiosError.response?.data || axiosError.message);
+          console.error(axiosError.response?.data || axiosError.message);
           throw error;
         } finally {
           set({ isSignedUp: false });
@@ -92,18 +98,14 @@ export const userAuthStore = create<AuthStore>()(
       },
 
       signin: async (data: AuthData) => {
-        let res;
-        set({ isLogined: true });
-
         try {
-          console.log("Signin data:", data);
-          res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signin", data);
-          console.log(res);
+          set({ isLogined: true });
+          const res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signin", data);
           set({ Authuser: res.data.data });
           return res.data.data;
         } catch (error) {
           const axiosError = error as AxiosError;
-          console.log(axiosError.response?.data || axiosError.message);
+          console.error(axiosError.response?.data || axiosError.message);
           throw error;
         } finally {
           set({ isLogined: false });
@@ -116,25 +118,23 @@ export const userAuthStore = create<AuthStore>()(
           set({ Authuser: null });
         } catch (error) {
           const axiosError = error as AxiosError;
-          console.log(axiosError.response?.data || axiosError.message);
+          console.error(axiosError.response?.data || axiosError.message);
         }
       },
-      verifyDomain: async ()=>{
+
+      addDomain: async (data: DomainData) => {
         try {
-          await axiosInstance.post("/api/")
-
-
+          await axiosInstance.post("/api/v1/userdomain/", data);
+          console.log("Domain added successfully");
         } catch (error) {
-          console.log(error || "error occure");
+          const axiosError = error as AxiosError;
+          console.error(axiosError.response?.data || "Failed to add domain");
+          throw error;
         }
-
-      }
-
-
-
+      },
     }),
     {
-      name: "user-auth-store", // Key in localStorage
+      name: "user-auth-store",
     }
   )
 );

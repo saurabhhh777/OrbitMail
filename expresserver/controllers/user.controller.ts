@@ -98,6 +98,7 @@ export const Signin = async (req:Request,res:Response)=>{
         }).json({
             message: "User Sign in successfully",
             success: true,
+            token:token,
             user: {
                 id: user._id,
                 email: user.email,
