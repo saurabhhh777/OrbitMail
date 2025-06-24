@@ -1,9 +1,9 @@
-import { Mail, Lock, Eye, EyeOff, Facebook, Apple } from 'lucide-react';
-import { useState } from 'react';
+import { Mail, Lock, Eye, EyeOff, Facebook, Apple } from "lucide-react";
+import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
-import { userAuthStore } from '../../store/userAuthStore';
-import { Toaster, toast } from 'react-hot-toast';
+import { userAuthStore } from "../../store/userAuthStore";
+import { Toaster, toast } from "react-hot-toast";
 
 const Signin = () => {
   const { signin } = userAuthStore();
@@ -13,47 +13,38 @@ const Signin = () => {
 
   const [formdata, setFormdata] = useState({
     email: "",
-    password: ""
+    password: "",
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormdata((data) => ({
       ...data,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSignin = async () => {
     try {
       setIsLoading(true);
-      console.log('Form data before signin:', formdata); // Debug: Check form data
 
-      // Debug: Check if signin function is accessible
-      console.log('Signin function:', signin);
       if (!signin) {
         toast.error("Signin function is not available");
         return;
       }
 
       const res = await signin(formdata);
-      console.log('Response from signin:', res); // Debug: Check response
 
-      if (res && (res._id || res.data?._id)) {
-        toast.success("Login Successful");
-        navigate("/dashboard");
-      } else {
-        toast.error("Invalid response from server. Please try again.");
-      }
-
+      toast.success(res?.data?.message)
+      navigate("/dashboard")
     } catch (error) {
-      console.error('Error during signin:', error);
+      console.error("Error during signin:", error);
       toast.error(
         typeof error === "string"
           ? error
           : error instanceof Error && error.message
-            ? error.message
-            : "Login failed. Please check your credentials and try again."
+          ? error.message
+          : "Login failed. Please check your credentials and try again."
       );
     } finally {
       setIsLoading(false);
@@ -68,8 +59,12 @@ const Signin = () => {
           <div className="w-14 h-14 flex items-center justify-center bg-gray-100 rounded-full mb-4">
             <Lock size={32} className="text-gray-400" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-900 text-center">Sign in to continue</h2>
-          <p className="text-gray-500 text-sm mt-1 text-center">Please sign in to start your session</p>
+          <h2 className="text-2xl font-semibold text-gray-900 text-center">
+            Sign in to continue
+          </h2>
+          <p className="text-gray-500 text-sm mt-1 text-center">
+            Please sign in to start your session
+          </p>
         </div>
 
         {/* Email Input */}
@@ -93,7 +88,7 @@ const Signin = () => {
             <Lock className="text-gray-400" size={18} />
           </div>
           <input
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             name="password"
             value={formdata.password}
             onChange={handleChange}
@@ -141,8 +136,11 @@ const Signin = () => {
 
         {/* Signup Prompt */}
         <div className="text-gray-500 text-xs text-center mt-2">
-          Don’t have an account?{' '}
-          <Link to="/signup" className="text-gray-900 font-medium hover:underline">
+          Don’t have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-gray-900 font-medium hover:underline"
+          >
             Sign Up
           </Link>
         </div>

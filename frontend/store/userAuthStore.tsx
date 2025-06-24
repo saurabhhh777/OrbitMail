@@ -41,8 +41,8 @@ interface AuthStore {
   toggleDarkMode: () => void;
 
   checkAuth: () => Promise<void>;
-  signup: (data: AuthData) => Promise<User>;
-  signin: (data: AuthData) => Promise<User>;
+  signup: (data: AuthData) => Promise<any>;
+  signin: (data: AuthData) => Promise<any>;
   logout: () => Promise<void>;
   addDomain: (data: DomainData) => Promise<void>;
 }
@@ -87,7 +87,7 @@ export const userAuthStore = create<AuthStore>()(
           set({ isSignedUp: true });
           const res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signup", data);
           set({ Authuser: res.data.data });
-          return res.data.data;
+          return res
         } catch (error) {
           const axiosError = error as AxiosError;
           console.error(axiosError.response?.data || axiosError.message);
@@ -106,7 +106,7 @@ export const userAuthStore = create<AuthStore>()(
           console.log(res);
 
           set({ Authuser: res.data.data });
-          return res.data.data;
+          return res;
         } catch (error) {
           const axiosError = error as AxiosError;
           console.error(axiosError.response?.data || axiosError.message);

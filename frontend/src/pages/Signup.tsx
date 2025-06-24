@@ -23,25 +23,25 @@ const Signup = () => {
 
 
 
-  const handleChange = (e)=>{
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>)=>{
     const {name,value} = e.target;
     setFormdata((data)=>({...data,[name]:value}));
   }
 
   const handleSignup = async()=>{
     try {
-    
+   
       setIsLoading(true);
       const res = await signup(formdata);
       
-      console.log(res);
+      
 
       if(res){
 
         console.log("handle Signup");
 
         toast.success("Signup Successfully");
-        navigate("/admin");
+        navigate("/dashboard");
 
       }
       
@@ -143,6 +143,7 @@ const Signup = () => {
           className="w-full bg-black text-white rounded-md py-2 text-[15px] font-semibold mt-2 mb-4 hover:bg-gray-900 transition"
         >
           Sign Up
+          {isLoading && ""}
         </button>
 
         {/* Divider */}
