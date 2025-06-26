@@ -7,7 +7,7 @@ const EmailSchema = new mongoose.Schema({
 });
 
 const UserDomainSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // link to registered user
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User'}, // link to registered user
   domain: { type: String, required: true }, // e.g., saurabh.com
   isVerified: { type: Boolean, default: false },
   mxVerifiedAt: { type: Date },

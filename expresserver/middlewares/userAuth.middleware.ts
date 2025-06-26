@@ -13,7 +13,7 @@ interface  jwtPayload {
 //express ki request epand kar hi hai.
 declare module "express" {
     interface Request {
-        user?: string; // Optional user property to hold the user ID    
+        id?: string; // Optional user property to hold the user ID    
     }
 
 }
@@ -21,7 +21,10 @@ declare module "express" {
 
 export const userAuth = (req:Request, res:Response, next:NextFunction):any=>{
     try {
-        const token = req.cookies.token;
+        const token = req.cookies.token || req.headers.authorization;
+
+        console.log("token from auth side:");
+        console.log(token);
 
         if (!token) {
             return res.status(401).json({
@@ -32,6 +35,11 @@ export const userAuth = (req:Request, res:Response, next:NextFunction):any=>{
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as jwtPayload;
 
+        console.log("User id from Auth:");
+        console.log(decoded);
+
+        console.log(decoded.id);
+
         if (!decoded) {
             return res.status(401).json({
                 message: "Unauthorized, invalid token",
@@ -39,7 +47,11 @@ export const userAuth = (req:Request, res:Response, next:NextFunction):any=>{
             });
         }
 
-        req.user = decoded.id;
+        req.id = decoded.id;
+
+        console.log("req.user from the auth user :");
+        console.log(req.id);
+
 
         next();
 

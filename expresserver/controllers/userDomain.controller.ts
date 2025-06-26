@@ -7,12 +7,16 @@ import userDomainModel from '../models/userDomain.model';
 const saltRounds = 10;
 
 // Helper to extract user ID from request
-const getUserId = (req: Request) => (req.user as any)._id;
+const getUserId = (req: Request) => req.id;
 
 // Create new domain
 export const addDomain = async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as any)._id;
+    const userId = req.id;
+
+    console.log("UserId is :");
+    console.log(userId);
+
     const { domain } = req.body;
     if (!domain) {
       return res.status(400).json({ message: 'Domain is required', success: false });
@@ -71,7 +75,7 @@ export const VerifyMXRec = async (req: Request, res: Response) => {
 // Get all domains for user
 export const getallDomains = async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as any)._id;
+    const userId = req.id;
     const domains = await userDomainModel.find({ userId });
     res.json(domains);
   } catch (error) {

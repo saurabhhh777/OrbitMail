@@ -11,10 +11,10 @@ import { userAuth } from '../middlewares/userAuth.middleware';
 const router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(userAuth);
+// router.use(userAuth);
 
 // Domain routes
-router.post('/', addDomain as RequestHandler);
+router.post('/',userAuth, addDomain as RequestHandler);
 router.post("/verifymxrec", VerifyMXRec as unknown as RequestHandler);
 router.get('/', getallDomains as RequestHandler);
 

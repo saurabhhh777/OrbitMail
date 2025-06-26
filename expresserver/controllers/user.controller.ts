@@ -90,10 +90,14 @@ export const Signin = async (req:Request,res:Response)=>{
         }, process.env.JWT_SECRET as string, );
 
 
+
+        console.log("Token from backend :");
+        console.log(token);
+
         return res.status(200).cookie("token",token,{
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'strict', // Helps prevent CSRF attacks
+            secure: false, // Use secure cookies in production
+            sameSite: 'lax', // Helps prevent CSRF attacks
             maxAge: 30 * 24 * 60 * 60 * 1000, // Cookie expires in 30 day
         }).json({
             message: "User Sign in successfully",

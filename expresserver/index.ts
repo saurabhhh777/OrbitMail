@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.route";
 import adminRouter from "./routes/admin.route";
 import emailRouter from "./routes/email.route";
@@ -17,6 +18,7 @@ connectDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(cors({
     origin: `${process.env.FRONTEND_URL}`,
     credentials: true,
