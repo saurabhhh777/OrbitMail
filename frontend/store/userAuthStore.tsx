@@ -44,7 +44,7 @@ interface AuthStore {
   signup: (data: AuthData) => Promise<any>;
   signin: (data: AuthData) => Promise<any>;
   logout: () => Promise<void>;
-  addDomain: (data: DomainData) => Promise<void>;
+  addDomain: (domain: string) => Promise<any>;
 }
 
 // -------------------- Store --------------------
@@ -68,7 +68,9 @@ export const userAuthStore = create<AuthStore>()(
 
       checkAuth: async () => {
         try {
-          const res = await axiosInstance.get<ApiResponse<User>>("/api/v1/user/check");
+          const res = await axiosInstance.get<ApiResponse<User>>("/api/v1/user/check",{
+            withCredentials:true
+          });
           set({ Authuser: res.data.data });
         } catch (error) {
           const axiosError = error as AxiosError;
@@ -85,7 +87,9 @@ export const userAuthStore = create<AuthStore>()(
           console.log("from the signup state:")
 
           set({ isSignedUp: true });
-          const res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signup", data);
+          const res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signup", data , {
+            withCredentials:true
+          });
           set({ Authuser: res.data.data });
           return res
         } catch (error) {
@@ -100,7 +104,9 @@ export const userAuthStore = create<AuthStore>()(
       signin: async (data: AuthData) => {
         try {
           set({ isLogined: true });
-          const res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signin", data);
+          const res = await axiosInstance.post<ApiResponse<User>>("/api/v1/user/signin", data ,{
+            withCredentials:true
+          });
           
           console.log("from State side");
           console.log(res);
@@ -126,10 +132,18 @@ export const userAuthStore = create<AuthStore>()(
         }
       },
 
-      addDomain: async (data: DomainData) => {
+      addDomain: async (domain: string) => {
+        
         try {
-          await axiosInstance.post("/api/v1/userdomain/", data);
-          console.log("Domain added successfully");
+          
+          const res = await axiosInstance.post("/api/v1/userdomain/", {
+            domain:domain.trim()
+          },{
+            withCredentials:true
+          });
+          console.log("Domain added successfully from state");
+
+          return res;
         } catch (error) {
           const axiosError = error as AxiosError;
           console.error(axiosError.response?.data || "Failed to add domain");

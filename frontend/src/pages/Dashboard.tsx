@@ -15,6 +15,8 @@ interface Domain {
   }[];
 }
 
+
+
 const Dashboard: React.FC = () => {
   const { addDomain } = userAuthStore();
 
@@ -59,23 +61,25 @@ const Dashboard: React.FC = () => {
     }
 
     try {
-      await addDomain({ domain: newDomain });
-      toast.success("Domain added successfully");
+      const res = await addDomain(newDomain);
+      if(res){
+        toast.success("Domain added successfully");
+        setDomains((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            name: newDomain,
+            isVerified: false,
+            emails: [],
+            mxRecords: [
+              { type: 'MX', name: '@', value: 'mx1.voidmail.fun', priority: 10 },
+              { type: 'MX', name: '@', value: 'mx2.voidmail.fun', priority: 20 },
+            ],
+          },
+        ]);
+      }
 
       // Add new domain to local state (temporary representation)
-      setDomains((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          name: newDomain,
-          isVerified: false,
-          emails: [],
-          mxRecords: [
-            { type: 'MX', name: '@', value: 'mx1.voidmail.fun', priority: 10 },
-            { type: 'MX', name: '@', value: 'mx2.voidmail.fun', priority: 20 },
-          ],
-        },
-      ]);
       setNewDomain('');
     } catch (error) {
       toast.error("Failed to add domain");
