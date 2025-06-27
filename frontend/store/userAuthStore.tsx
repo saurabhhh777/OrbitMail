@@ -45,6 +45,8 @@ interface AuthStore {
   signin: (data: AuthData) => Promise<any>;
   logout: () => Promise<void>;
   addDomain: (domain: string) => Promise<any>;
+  getAllDomain:()=> Promise<any>;
+  verifyDomain:(domain:string)=>Promise<any>;
 }
 
 // -------------------- Store --------------------
@@ -150,6 +152,38 @@ export const userAuthStore = create<AuthStore>()(
           throw error;
         }
       },
+      getAllDomain:async()=>{
+        try {
+
+          const res = await axiosInstance.get("/api/v1/userdomain/",{
+            withCredentials:true
+          });
+
+          console.log("Get all Domain of User:");
+          console.log(res);
+
+          return res.data; 
+          
+        } catch (error) {
+          console.log(error);
+        }
+      },
+      verifyDomain: async(domain:string)=>{
+        try {
+          
+          const res = await axiosInstance.post("/api/v1/userdomain/verifymxrec",{domain:domain},{
+            withCredentials:true
+          });
+
+          console.log("VerifyDomain from the State :");
+          console.log(res);
+
+          return res;
+
+        } catch (error) {
+          console.log(error);
+        }
+      }
     }),
     {
       name: "user-auth-store",

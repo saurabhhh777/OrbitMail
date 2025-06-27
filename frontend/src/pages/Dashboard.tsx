@@ -1,134 +1,120 @@
-import React, { useState } from 'react';
-import { userAuthStore } from '../../store/userAuthStore';
-import { Toaster, toast } from 'react-hot-toast';
+import React, { useState, useEffect, useCallback } from "react";
+import { userAuthStore } from "../../store/userAuthStore";
+import { Toaster, toast } from "react-hot-toast";
 
+// Define the domain object type
 interface Domain {
-  id: string;
-  name: string;
+  _id: string;
+  userId: string;
+  domain: string;
   isVerified: boolean;
-  emails: string[];
-  mxRecords: {
-    type: string;
-    name: string;
-    value: string;
-    priority: number;
-  }[];
+  emails: any[];
+  createdAt: string;
+  __v: number;
 }
 
-
-
 const Dashboard: React.FC = () => {
-  const { addDomain } = userAuthStore();
+  const { getAllDomain, addDomain, verifyDomain } = userAuthStore();
+  const [newDomain, setNewDomain] = useState<string>("");
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [verifying, setVerifying] = useState<{ [key: string]: boolean }>({});
 
-  const [domains, setDomains] = useState<Domain[]>([
-    {
-      id: '1',
-      name: 'voidmail.fun',
-      isVerified: true,
-      emails: ['founder', 'support', 'noreply', 'admin'],
-      mxRecords: [
-        { type: 'MX', name: '@', value: 'mx1.voidmail.fun', priority: 10 },
-        { type: 'MX', name: '@', value: 'mx2.voidmail.fun', priority: 20 },
-      ],
-    },
-    {
-      id: '2',
-      name: 'mydomain.io',
-      isVerified: false,
-      emails: ['contact'],
-      mxRecords: [
-        { type: 'MX', name: '@', value: 'mx1.voidmail.fun', priority: 10 },
-        { type: 'MX', name: '@', value: 'mx2.voidmail.fun', priority: 20 },
-      ],
-    },
-  ]);
+  const fetchDomains = useCallback(async () => {
+    try {
+      setLoading(true);
+      console.log("[Dashboard] Fetching domains...");
+      const response = await getAllDomain();
+      
+      console.log("[Dashboard] API response:", response);
+      
+      if (response && response.domains && Array.isArray(response.domains)) {
+        console.log(`[Dashboard] Found ${response.domains.length} domains`);
+        setDomains(response.domains);
+      } else {
+        console.error("[Dashboard] Unexpected response format:", response);
+        toast.error("Failed to load domains: Invalid response format");
+        setDomains([]);
+      }
+    } catch (error) {
+      console.error("[Dashboard] Error fetching domains:", error);
+      toast.error("Failed to load domains");
+      setDomains([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [getAllDomain]);
 
-  const [newDomain, setNewDomain] = useState('');
-  const [expandedDomain, setExpandedDomain] = useState<string | null>(null);
-  const [verifyingDomain, setVerifyingDomain] = useState<string | null>(null);
-  const [verificationStatus, setVerificationStatus] = useState<Record<string, string>>({});
-  const [copiedRecord, setCopiedRecord] = useState('');
+  useEffect(() => {
+    console.log("[Dashboard] Component mounted, fetching domains");
+    fetchDomains();
+  }, [fetchDomains]);
 
-  const toggleDomain = (domainId: string) => {
-    setExpandedDomain(expandedDomain === domainId ? null : domainId);
-    setVerifyingDomain(null);
-  };
+  const handleVerifyDomain = async (domainId: string, domainName: string) => {
+    console.log(`[Dashboard] Verifying domain: ${domainName} (ID: ${domainId})`);
+    try {
+      // Set verifying state for this specific domain
+      setVerifying(prev => ({ ...prev, [domainId]: true }));
+      
+      console.log(`[Dashboard] Calling verifyDomain for: ${domainName}`);
+      const response = await verifyDomain(domainId);
+      console.log(`[Dashboard] verifyDomain response for ${domainName}:`, response);
+
+      if (response && response.success) {
+        toast.success(`${domainName} is verified`);
+        console.log(`[Dashboard] Refreshing domains after verification of ${domainName}`);
+        
+        // Optimistic UI update
+        setDomains(prevDomains => 
+          prevDomains.map(d => 
+            d._id === domainId ? { ...d, isVerified: true } : d
+          )
+        );
+      } else {
+        toast.error(response?.message || `Failed to verify ${domainName}`);
+      }
+    } catch (error: any) {
+      console.error(`[Dashboard] Error verifying domain ${domainName}:`, error);
+      toast.error(error.message || `Failed to verify ${domainName}`);
+    } finally {
+      // Reset verifying state
+      setVerifying(prev => ({ ...prev, [domainId]: false }));
+    }
+  }
 
   const handleAddDomain = async () => {
-    if (!newDomain.trim()) {
+    const domain = newDomain.trim();
+    if (!domain) {
       toast.error("Please enter a domain name.");
       return;
     }
 
     try {
-      const res = await addDomain(newDomain);
-      if(res){
+      console.log(`[Dashboard] Adding domain: ${domain}`);
+      const res = await addDomain(domain);
+      console.log(`[Dashboard] addDomain response for ${domain}:`, res);
+      
+      if (res) {
         toast.success("Domain added successfully");
-        setDomains((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            name: newDomain,
-            isVerified: false,
-            emails: [],
-            mxRecords: [
-              { type: 'MX', name: '@', value: 'mx1.voidmail.fun', priority: 10 },
-              { type: 'MX', name: '@', value: 'mx2.voidmail.fun', priority: 20 },
-            ],
-          },
-        ]);
+        setNewDomain("");
+        console.log(`[Dashboard] Refreshing domains after adding ${domain}`);
+        await fetchDomains();
       }
-
-      // Add new domain to local state (temporary representation)
-      setNewDomain('');
-    } catch (error) {
-      toast.error("Failed to add domain");
-      console.error("Error adding domain:", error);
+    } catch (error: any) {
+      console.error(`[Dashboard] Error adding domain ${domain}:`, error);
+      toast.error(error.message || "Failed to add domain");
     }
   };
 
-  const startVerification = (domainId: string) => {
-    setVerifyingDomain(domainId);
-    setVerificationStatus((prev) => ({ ...prev, [domainId]: 'pending' }));
-  };
-
-  const verifyDomain = async (domainId: string) => {
-    setVerificationStatus((prev) => ({ ...prev, [domainId]: 'verifying' }));
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const success = Math.random() > 0.2;
-        if (success) {
-          setDomains((domains) =>
-            domains.map((domain) =>
-              domain.id === domainId ? { ...domain, isVerified: true } : domain
-            )
-          );
-          setVerificationStatus((prev) => ({ ...prev, [domainId]: 'verified' }));
-        } else {
-          setVerificationStatus((prev) => ({ ...prev, [domainId]: 'failed' }));
-        }
-        resolve(success);
-      }, 2000);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
-  };
-
-  const handleAddEmail = (domainId: string, emailPrefix: string) => {
-    if (emailPrefix.trim()) {
-      setDomains((domains) =>
-        domains.map((domain) =>
-          domain.id === domainId
-            ? { ...domain, emails: [...domain.emails, emailPrefix.trim()] }
-            : domain
-        )
-      );
-    }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedRecord(text);
-    setTimeout(() => setCopiedRecord(''), 2000);
   };
 
   return (
@@ -136,8 +122,12 @@ const Dashboard: React.FC = () => {
       <Toaster />
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">VoidMail Dashboard</h1>
-          <p className="text-gray-600">Manage your domains and email addresses</p>
+          <h1 className="text-3xl font-bold text-gray-800">
+            VoidMail Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Manage your domains and email addresses
+          </p>
         </header>
 
         {/* Add Domain */}
@@ -150,231 +140,92 @@ const Dashboard: React.FC = () => {
               onChange={(e) => setNewDomain(e.target.value)}
               placeholder="Enter domain name (e.g., yourdomain.com)"
               className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onKeyDown={(e) => e.key === "Enter" && handleAddDomain()}
             />
             <button
               onClick={handleAddDomain}
-              className="bg-blue-600 text-white px-6 py-2 rounded-r-lg hover:bg-blue-700 transition-colors"
+              className="bg-blue-600 text-white px-6 py-2 rounded-r-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+              disabled={loading}
             >
               Add Domain
             </button>
           </div>
         </div>
 
-        {/* Domains */}
+        {/* Domains List */}
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-800">Your Domains</h2>
-
-          {domains.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <p className="text-gray-500">No domains added yet. Add your first domain to get started!</p>
+          
+          {loading ? (
+            <div className="flex flex-col items-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-2"></div>
+              <p className="text-gray-500">Loading domains...</p>
+            </div>
+          ) : domains.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <p className="text-gray-500">No domains found. Add your first domain!</p>
             </div>
           ) : (
-            domains.map((domain) => (
-              <DomainCard
-                key={domain.id}
-                domain={domain}
-                expandedDomain={expandedDomain}
-                toggleDomain={toggleDomain}
-                verifyingDomain={verifyingDomain}
-                verificationStatus={verificationStatus}
-                startVerification={startVerification}
-                verifyDomain={verifyDomain}
-                handleAddEmail={handleAddEmail}
-                copyToClipboard={copyToClipboard}
-                copiedRecord={copiedRecord}
-              />
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// 🧩 Sub-components
-interface DomainCardProps {
-  domain: Domain;
-  expandedDomain: string | null;
-  toggleDomain: (id: string) => void;
-  verifyingDomain: string | null;
-  verificationStatus: Record<string, string>;
-  startVerification: (id: string) => void;
-  verifyDomain: (id: string) => Promise<unknown>;
-  handleAddEmail: (id: string, email: string) => void;
-  copyToClipboard: (text: string) => void;
-  copiedRecord: string;
-}
-
-const DomainCard: React.FC<DomainCardProps> = ({
-  domain,
-  expandedDomain,
-  toggleDomain,
-  verifyingDomain,
-  verificationStatus,
-  startVerification,
-  verifyDomain,
-  handleAddEmail,
-  copyToClipboard,
-  copiedRecord,
-}) => {
-  const isExpanded = expandedDomain === domain.id;
-  const isVerifying = verifyingDomain === domain.id;
-
-  return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div
-        className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
-        onClick={() => toggleDomain(domain.id)}
-      >
-        <div className="flex items-center">
-          <span
-            className={`w-3 h-3 rounded-full mr-3 ${
-              domain.isVerified ? 'bg-green-500' : 'bg-yellow-500'
-            }`}
-          ></span>
-          <h3 className="text-lg font-medium">{domain.name}</h3>
-          {domain.isVerified && (
-            <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-              Verified
-            </span>
-          )}
-        </div>
-        {!domain.isVerified && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              startVerification(domain.id);
-            }}
-            className="px-3 py-1 rounded-md text-sm bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-            disabled={verificationStatus[domain.id] === 'verifying'}
-          >
-            {verificationStatus[domain.id] === 'verifying' ? 'Verifying...' : 'Verify Domain'}
-          </button>
-        )}
-      </div>
-
-      {isExpanded && (
-        <div className="border-t p-4 bg-gray-50">
-          {isVerifying ? (
-            <VerifyPanel
-              domain={domain}
-              verifyDomain={verifyDomain}
-              status={verificationStatus[domain.id]}
-              copyToClipboard={copyToClipboard}
-              copiedRecord={copiedRecord}
-              cancel={() => toggleDomain(domain.id)}
-            />
-          ) : (
-            <EmailSection domain={domain} onAddEmail={handleAddEmail} />
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const EmailSection: React.FC<{ domain: Domain; onAddEmail: (id: string, email: string) => void }> = ({
-  domain,
-  onAddEmail,
-}) => {
-  return (
-    <>
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-medium text-gray-700">Email Addresses</h4>
-        <EmailForm onAdd={(prefix) => onAddEmail(domain.id, prefix)} />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-        {domain.emails.map((prefix, index) => (
-          <div key={index} className="bg-white border rounded-lg p-3 flex items-center">
-            <div className="flex-1">
-              <span className="font-medium">{prefix}</span>
-              <span className="text-gray-500">@{domain.name}</span>
+            <div className="grid grid-cols-1 gap-4">
+              {domains.map((domainObj) => (
+                <div 
+                  key={domainObj._id}
+                  className="bg-white rounded-lg shadow p-4"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-lg font-mono font-bold text-gray-800">
+                      {domainObj.domain}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      domainObj.isVerified 
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}>
+                      {domainObj.isVerified ? "Verified" : "Pending Verification"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="text-sm text-gray-500">
+                      <span>Created: {formatDate(domainObj.createdAt)}</span>
+                      <span className="mx-2">•</span>
+                      <span>Emails: {domainObj.emails.length}</span>
+                    </div>
+                    
+                    <div className="flex space-x-3">
+                      <button 
+                        className="text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-600 rounded text-sm disabled:text-gray-400 disabled:border-gray-400"
+                        onClick={() => navigator.clipboard.writeText(domainObj.domain)}
+                      >
+                        Copy Domain
+                      </button>
+                      <button 
+                        className={`px-3 py-1 rounded text-sm font-medium flex items-center justify-center ${
+                          domainObj.isVerified
+                            ? "bg-gray-100 text-gray-800 border border-gray-300"
+                            : "bg-green-600 hover:bg-green-900 text-white"
+                        } disabled:bg-gray-300 disabled:text-gray-500`}
+                        disabled={domainObj.isVerified || verifying[domainObj._id]}
+                        onClick={() => handleVerifyDomain(domainObj._id, domainObj.domain)}
+                      >
+                        {verifying[domainObj._id] ? (
+                          <>
+                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                            Verifying...
+                          </>
+                        ) : domainObj.isVerified ? (
+                          "Verified"
+                        ) : (
+                          "Verify"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-};
-
-const EmailForm: React.FC<{ onAdd: (prefix: string) => void }> = ({ onAdd }) => {
-  const [emailPrefix, setEmailPrefix] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (emailPrefix.trim()) {
-      onAdd(emailPrefix);
-      setEmailPrefix('');
-      setIsAdding(false);
-    }
-  };
-
-  return !isAdding ? (
-    <button
-      onClick={() => setIsAdding(true)}
-      className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-    >
-      ➕ Add Email
-    </button>
-  ) : (
-    <form onSubmit={handleSubmit} className="flex">
-      <input
-        type="text"
-        value={emailPrefix}
-        onChange={(e) => setEmailPrefix(e.target.value)}
-        placeholder="Prefix (e.g., support)"
-        autoFocus
-        className="border border-gray-300 rounded-l px-3 py-1 text-sm w-32 focus:outline-none focus:ring-1 focus:ring-blue-500"
-      />
-      <button type="submit" className="bg-blue-600 text-white px-3 py-1 rounded-r text-sm">
-        Add
-      </button>
-    </form>
-  );
-};
-
-const VerifyPanel: React.FC<{
-  domain: Domain;
-  verifyDomain: (id: string) => Promise<unknown>;
-  status: string;
-  copyToClipboard: (text: string) => void;
-  copiedRecord: string;
-  cancel: () => void;
-}> = ({ domain, verifyDomain, status, copyToClipboard, copiedRecord, cancel }) => {
-  return (
-    <div>
-      <h3 className="text-lg font-medium mb-4">Verify Domain Ownership</h3>
-      {status === 'failed' && (
-        <div className="bg-red-100 text-red-700 p-2 rounded mb-2">Verification failed. Try again.</div>
-      )}
-      <div className="bg-white rounded-lg border p-4 mb-4">
-        <h4 className="font-medium mb-2">Add these MX records to your DNS:</h4>
-        <ul>
-          {domain.mxRecords.map((record, idx) => {
-            const text = `${record.name} ${record.priority} ${record.value}`;
-            return (
-              <li key={idx} className="text-sm mb-1 flex justify-between">
-                <span>{text}</span>
-                <button onClick={() => copyToClipboard(text)} className="text-blue-500 text-xs">
-                  {copiedRecord === text ? 'Copied' : 'Copy'}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-      <div className="flex gap-2">
-        <button
-          onClick={() => verifyDomain(domain.id)}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          disabled={status === 'verifying'}
-        >
-          {status === 'verifying' ? 'Verifying...' : 'Verify DNS'}
-        </button>
-        <button onClick={cancel} className="px-4 py-2 text-gray-600">
-          Cancel
-        </button>
+          )}
+        </div>
       </div>
     </div>
   );

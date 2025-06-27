@@ -16,7 +16,7 @@ const router = express.Router();
 // Domain routes
 router.post('/',userAuth, addDomain as RequestHandler);
 router.post("/verifymxrec", VerifyMXRec as unknown as RequestHandler);
-router.get('/', getallDomains as RequestHandler);
+router.get('/',userAuth, getallDomains as RequestHandler);
 
 
 export default router;

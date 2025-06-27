@@ -1,7 +1,8 @@
 // userDomain.controller.ts
 import { Request, Response } from 'express';
 import bcryptjs from 'bcryptjs';
-import dns from 'dns/promises';
+import * as dns from "dns";
+import {promisify} from "util";
 import userDomainModel from '../models/userDomain.model';
 
 const saltRounds = 10;
@@ -29,35 +30,51 @@ export const addDomain = async (req: Request, res: Response) => {
   }
 };
 
+
+const resolveMxAsync = promisify(dns.resolveMx);
+
 // Verify MX Record (dummy implementation)
 export const VerifyMXRec = async (req: Request, res: Response) => {
   try {
-    const { domain } = req.body;
+    const { domainId } = req.body;
 
-    if (!domain) {
-      return res.status(400).json({ message: 'Domain is required', success: false });
+    console.log("From verifyMXRec",domainId);
+
+    if (!domainId) {
+      return res.status(400).json({ message: 'Domain ID is required', success: false });
     }
 
-    // Lookup MX records
-    const mxRecords = await dns.resolveMx(domain);
+    // Find domain by ID
+    const domainDoc = await userDomainModel.findById(domainId);
+
+    console.log(domainDoc);
+
+
+    if (!domainDoc) {
+      return res.status(404).json({ message: 'Domain not found', success: false });
+    }
+
+    const domainName = domainDoc.domain; // Get actual domain name
+
+    // Lookup MX records using the domain name
+    const mxRecords = await dns.promises.resolveMx(domainName);
     const mxHosts = mxRecords.map(r => r.exchange.toLowerCase());
 
     const hasMX1 = mxHosts.includes('mx1.orbitmail.fun');
     const hasMX2 = mxHosts.includes('mx2.orbitmail.fun');
-
     const isVerified = hasMX1 && hasMX2;
 
     // Update DB if verified
     if (isVerified) {
-      await userDomainModel.findOneAndUpdate(
-        { domain },
-        { isVerify: true },
+      await userDomainModel.findByIdAndUpdate(
+        domainId,
+        { isVerified: true },
         { new: true }
       );
     }
 
     return res.json({
-      domain,
+      domain: domainName,
       mxRecords,
       verified: isVerified,
       missing: [
@@ -68,7 +85,10 @@ export const VerifyMXRec = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("MX check failed:", error);
-    return res.status(500).json({ message: 'Server error', success: false });
+    return res.status(500).json({ 
+      message: 'DNS lookup failed',
+      success: false
+    });
   }
 };
 
@@ -76,8 +96,21 @@ export const VerifyMXRec = async (req: Request, res: Response) => {
 export const getallDomains = async (req: Request, res: Response) => {
   try {
     const userId = req.id;
+
+    console.log("User id from the getAllDomains");
+    console.log(userId);
+
     const domains = await userDomainModel.find({ userId });
-    res.json(domains);
+
+    console.log("Domains from the backend");
+    console.log(domains);
+
+    return res.json({
+      message:"All domain got",
+      success:true,
+      domains,
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
