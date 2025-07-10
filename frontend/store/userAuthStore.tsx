@@ -15,10 +15,10 @@ interface AuthData {
   password: string;
 }
 
-interface DomainData {
-  domain: string;
-  // Add other fields if required for the domain
-}
+// interface DomainData {
+//   domain: string;
+//   // Add other fields if required for the domain
+// }
 
 interface ApiResponse<T> {
   data: T;
