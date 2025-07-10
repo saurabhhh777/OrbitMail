@@ -1,9 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { axiosInstance } from "../lib/axios";
-import { AxiosError } from "axios";
 
-// -------------------- Types --------------------
 
 interface User {
   _id: string;
@@ -75,8 +73,9 @@ export const userAuthStore = create<AuthStore>()(
           });
           set({ Authuser: res.data.data });
         } catch (error) {
-          const axiosError = error as AxiosError;
-          console.error(axiosError.response?.data || axiosError.message);
+          // const axiosError = error as AxiosError;
+          // console.error(axiosError.response?.data || axiosError.message);
+          console.log(error);
           set({ Authuser: null });
         } finally {
           set({ isCheckingAuth: false });
@@ -95,8 +94,9 @@ export const userAuthStore = create<AuthStore>()(
           set({ Authuser: res.data.data });
           return res
         } catch (error) {
-          const axiosError = error as AxiosError;
-          console.error(axiosError.response?.data || axiosError.message);
+          // const axiosError = error as AxiosError;
+          // console.error(axiosError.response?.data || axiosError.message);
+          console.log(error);
           throw error;
         } finally {
           set({ isSignedUp: false });
@@ -116,8 +116,9 @@ export const userAuthStore = create<AuthStore>()(
           set({ Authuser: res.data.data });
           return res;
         } catch (error) {
-          const axiosError = error as AxiosError;
-          console.error(axiosError.response?.data || axiosError.message);
+          // const axiosError = error as AxiosError;
+          // console.error(axiosError.response?.data || axiosError.message);
+          console.log(error);
           throw error;
         } finally {
           set({ isLogined: false });
@@ -129,8 +130,9 @@ export const userAuthStore = create<AuthStore>()(
           await axiosInstance.post("/api/v1/user/logout");
           set({ Authuser: null });
         } catch (error) {
-          const axiosError = error as AxiosError;
-          console.error(axiosError.response?.data || axiosError.message);
+          // const axiosError = error as AxiosError;
+          // console.error(axiosError.response?.data || axiosError.message);
+          console.log(error);
         }
       },
 
@@ -147,9 +149,10 @@ export const userAuthStore = create<AuthStore>()(
 
           return res;
         } catch (error) {
-          const axiosError = error as AxiosError;
-          console.error(axiosError.response?.data || "Failed to add domain");
-          throw error;
+          // const axiosError = error as AxiosError;
+          // console.error(axiosError.response?.data || "Failed to add domain");
+          console.log(error);
+          // throw error;
         }
       },
       getAllDomain:async()=>{
