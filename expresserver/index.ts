@@ -28,7 +28,14 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        message: 'OrbitMail Express Server is running',
+        timestamp: new Date().toISOString()
+    });
+});
 
 //user route 
 app.use("/api/v1/user", userRouter);

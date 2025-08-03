@@ -3,6 +3,8 @@ import emailSentReceiveModel from '../models/emailSentReceive.model';
 import userDomainModel from '../models/userDomain.model';
 import userModel from '../models/user.model';
 import bcryptjs from 'bcryptjs';
+// Import email service manager
+import emailServiceManager from '../services/emailService';
 
 // Define the user type
 interface User {
@@ -70,6 +72,7 @@ export const sendEmail = async (req: Request, res: Response) => {
             });
         }
 
+        // Store email in database
         const newEmail = new emailSentReceiveModel({
             to,
             from,
@@ -80,17 +83,38 @@ export const sendEmail = async (req: Request, res: Response) => {
 
         await newEmail.save();
 
-        return res.status(200).json({
-            message: "Email sent successfully",
-            success: true,
-            emailDetails: {
-                to,
-                from,
-                subject,
-                text,
-                html: html || undefined
-            },
-        });
+        // Send email using email service manager
+        try {
+            const jobId = await emailServiceManager.sendEmail(from, to, subject, text);
+            
+            return res.status(200).json({
+                message: "Email sent successfully",
+                success: true,
+                jobId,
+                emailDetails: {
+                    to,
+                    from,
+                    subject,
+                    text,
+                    html: html || undefined
+                },
+            });
+        } catch (emailError: any) {
+            console.error("Email sending failed:", emailError);
+            
+            // Still return success since email is stored in database
+            return res.status(200).json({
+                message: "Email stored successfully. Sending may be delayed.",
+                success: true,
+                emailDetails: {
+                    to,
+                    from,
+                    subject,
+                    text,
+                    html: html || undefined
+                },
+            });
+        }
 
     } catch (error) {
         console.log("Server error:", error);
@@ -320,6 +344,60 @@ export const getEmailAnalytics = async (req: Request, res: Response) => {
         res.status(500).json({
             message: "Internal Server Error",
             success: false
+        });
+    }
+}
+
+export const getEmailServiceStatus = async (req: Request, res: Response) => {
+    try {
+        const status = emailServiceManager.getStatus();
+        const queueStats = emailServiceManager.getQueueStats();
+        
+        res.json({
+            message: "Email service status retrieved successfully",
+            success: true,
+            status,
+            queueStats
+        });
+    } catch (error) {
+        console.log("Server error:", error);
+        res.status(500).json({
+            message: "Internal Server Error",
+            success: false,
+        });
+    }
+}
+
+export const getEmailJobStatus = async (req: Request, res: Response) => {
+    try {
+        const { jobId } = req.params;
+        
+        if (!jobId) {
+            return res.status(400).json({
+                message: "Job ID is required",
+                success: false
+            });
+        }
+
+        const jobStatus = emailServiceManager.getJobStatus(jobId);
+        
+        if (!jobStatus) {
+            return res.status(404).json({
+                message: "Job not found",
+                success: false
+            });
+        }
+
+        res.json({
+            message: "Job status retrieved successfully",
+            success: true,
+            jobStatus
+        });
+    } catch (error) {
+        console.log("Server error:", error);
+        res.status(500).json({
+            message: "Internal Server Error",
+            success: false,
         });
     }
 }

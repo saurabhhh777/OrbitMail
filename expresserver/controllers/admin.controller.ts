@@ -129,222 +129,262 @@ export const adminSignout = async (req: Request, res: Response) => {
 // Get admin dashboard analytics
 export const getAdminDashboard = async (req: Request, res: Response): Promise<void> => {
     try {
-        // Get total users
+        // Get total users count
         const totalUsers = await userModel.countDocuments();
         
-        // Get users by subscription plan
-        const freeUsers = await userModel.countDocuments({ 'subscription.plan': 'free' });
-        const basicUsers = await userModel.countDocuments({ 'subscription.plan': 'basic' });
-        const premiumUsers = await userModel.countDocuments({ 'subscription.plan': 'premium' });
+        // Get premium users count
+        const premiumUsers = await userModel.countDocuments({
+            'subscription.plan': { $ne: 'free' }
+        });
         
-        // Get total domains
+        // Get free users count
+        const freeUsers = totalUsers - premiumUsers;
+        
+        // Get total domains count
         const totalDomains = await userDomainModel.countDocuments();
-        const verifiedDomains = await userDomainModel.countDocuments({ isVerified: true });
         
-        // Get total emails
+        // Get total emails count
         const totalEmails = await emailSentReceiveModel.countDocuments();
         
-        // Get recent activity (last 30 days)
+        // Calculate revenue (assuming premium users pay $10/month)
+        const monthlyRevenue = premiumUsers * 10;
+        
+        // Get user distribution for charts
+        const userDistribution = [
+            { name: 'Free Users', value: freeUsers, color: '#8884d8' },
+            { name: 'Premium Users', value: premiumUsers, color: '#82ca9d' }
+        ];
+        
+        // Get recent user registrations (last 30 days)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
-        const recentUsers = await userModel.countDocuments({
+        const recentUsers = await userModel.find({
             createdAt: { $gte: thirtyDaysAgo }
-        });
+        }).sort({ createdAt: -1 }).limit(10);
         
-        const recentEmails = await emailSentReceiveModel.countDocuments({
-            createdAt: { $gte: thirtyDaysAgo }
-        });
-
-        // Get monthly subscription revenue
-        const basicRevenue = basicUsers * 999; // ₹999 per month
-        const premiumRevenue = premiumUsers * 1999; // ₹1999 per month
-        const totalRevenue = basicRevenue + premiumRevenue;
-
         res.json({
             message: "Admin dashboard data retrieved successfully",
             success: true,
             dashboard: {
-                users: {
-                    total: totalUsers,
-                    free: freeUsers,
-                    basic: basicUsers,
-                    premium: premiumUsers,
-                    recent: recentUsers
-                },
-                domains: {
-                    total: totalDomains,
-                    verified: verifiedDomains
-                },
-                emails: {
-                    total: totalEmails,
-                    recent: recentEmails
-                },
-                revenue: {
-                    basic: basicRevenue,
-                    premium: premiumRevenue,
-                    total: totalRevenue
-                }
+                totalUsers,
+                premiumUsers,
+                freeUsers,
+                totalDomains,
+                totalEmails,
+                monthlyRevenue,
+                userDistribution,
+                recentUsers: recentUsers.map(user => ({
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    createdAt: user.createdAt,
+                    subscription: user.subscription
+                }))
             }
         });
-
     } catch (error) {
         console.error("Admin dashboard error:", error);
         res.status(500).json({
-            message: "Failed to get admin dashboard data",
+            message: "Internal Server Error",
             success: false
         });
     }
 };
 
-// Get users list with filters
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { page = 1, limit = 10, plan, search } = req.query;
+        const { page = 1, limit = 10, search = '', filter = 'all' } = req.query;
         
-        const query: any = {};
+        const skip = (Number(page) - 1) * Number(limit);
         
-        if (plan && plan !== 'all') {
-            query['subscription.plan'] = plan;
-        }
+        let query: any = {};
         
+        // Search functionality
         if (search) {
             query.$or = [
-                { email: { $regex: search, $options: 'i' } },
-                { name: { $regex: search, $options: 'i' } }
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
             ];
         }
-
+        
+        // Filter functionality
+        if (filter === 'premium') {
+            query['subscription.plan'] = { $ne: 'free' };
+        } else if (filter === 'free') {
+            query['subscription.plan'] = 'free';
+        }
+        
         const users = await userModel.find(query)
             .select('-password')
             .sort({ createdAt: -1 })
-            .limit(Number(limit))
-            .skip((Number(page) - 1) * Number(limit));
-
+            .skip(skip)
+            .limit(Number(limit));
+        
         const totalUsers = await userModel.countDocuments(query);
-
+        
         res.json({
             message: "Users retrieved successfully",
             success: true,
             users,
             pagination: {
-                current: Number(page),
-                total: Math.ceil(totalUsers / Number(limit)),
-                totalUsers
+                currentPage: Number(page),
+                totalPages: Math.ceil(totalUsers / Number(limit)),
+                totalUsers,
+                usersPerPage: Number(limit)
             }
         });
-
     } catch (error) {
         console.error("Get users error:", error);
         res.status(500).json({
-            message: "Failed to get users",
+            message: "Internal Server Error",
             success: false
         });
     }
 };
 
-// Get domains list
 export const getDomains = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { page = 1, limit = 10, verified, search } = req.query;
+        const { page = 1, limit = 10, search = '', filter = 'all' } = req.query;
         
-        const query: any = {};
+        const skip = (Number(page) - 1) * Number(limit);
         
-        if (verified !== undefined) {
-            query.isVerified = verified === 'true';
-        }
+        let query: any = {};
         
+        // Search functionality
         if (search) {
             query.domain = { $regex: search, $options: 'i' };
         }
-
+        
+        // Filter functionality
+        if (filter === 'verified') {
+            query.isVerified = true;
+        } else if (filter === 'unverified') {
+            query.isVerified = false;
+        }
+        
         const domains = await userDomainModel.find(query)
-            .populate('userId', 'email name')
+            .populate('userId', 'name email')
             .sort({ createdAt: -1 })
-            .limit(Number(limit))
-            .skip((Number(page) - 1) * Number(limit));
-
+            .skip(skip)
+            .limit(Number(limit));
+        
         const totalDomains = await userDomainModel.countDocuments(query);
-
+        
         res.json({
             message: "Domains retrieved successfully",
             success: true,
             domains,
             pagination: {
-                current: Number(page),
-                total: Math.ceil(totalDomains / Number(limit)),
-                totalDomains
+                currentPage: Number(page),
+                totalPages: Math.ceil(totalDomains / Number(limit)),
+                totalDomains,
+                domainsPerPage: Number(limit)
             }
         });
-
     } catch (error) {
         console.error("Get domains error:", error);
         res.status(500).json({
-            message: "Failed to get domains",
+            message: "Internal Server Error",
             success: false
         });
     }
 };
 
-// Get email analytics for admin
 export const getEmailAnalytics = async (req: Request, res: Response): Promise<void> => {
     try {
         const { period = '30days' } = req.query;
         
-        let start: Date, end: Date = new Date();
+        // Calculate date range based on period
+        let startDate: Date;
+        const endDate = new Date();
         
         switch (period) {
-            case '1day':
-                start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
-                break;
             case '7days':
-                start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+                startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
                 break;
             case '30days':
-                start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+                startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+            case '90days':
+                startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
                 break;
             default:
-                start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+                startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
         }
-
-        const emails = await emailSentReceiveModel.find({
-            createdAt: {
-                $gte: start,
-                $lte: end
+        
+        // Get email statistics
+        const totalEmails = await emailSentReceiveModel.countDocuments({
+            createdAt: { $gte: startDate, $lte: endDate }
+        });
+        
+        // Get emails by type (sent vs received)
+        const sentEmails = await emailSentReceiveModel.countDocuments({
+            createdAt: { $gte: startDate, $lte: endDate },
+            from: { $exists: true, $ne: '' }
+        });
+        
+        const receivedEmails = totalEmails - sentEmails;
+        
+        // Get daily email trends
+        const dailyTrends = await emailSentReceiveModel.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate, $lte: endDate }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { _id: 1 }
             }
-        }).sort({ createdAt: -1 });
-
-        // Group by date
-        const emailStats = emails.reduce((acc: any, email) => {
-            const date = email.createdAt.toISOString().split('T')[0];
-            if (!acc[date]) {
-                acc[date] = { total: 0 };
+        ]);
+        
+        // Get top domains by email volume
+        const topDomains = await emailSentReceiveModel.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate, $lte: endDate }
+                }
+            },
+            {
+                $group: {
+                    _id: "$from",
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            },
+            {
+                $limit: 10
             }
-            acc[date].total++;
-            return acc;
-        }, {});
-
-        const chartData = Object.keys(emailStats).map(date => ({
-            date,
-            total: emailStats[date].total
-        }));
-
+        ]);
+        
         res.json({
             message: "Email analytics retrieved successfully",
             success: true,
             analytics: {
                 period,
-                startDate: start,
-                endDate: end,
-                totalEmails: emails.length,
-                chartData
+                startDate,
+                endDate,
+                totalEmails,
+                sentEmails,
+                receivedEmails,
+                dailyTrends,
+                topDomains
             }
         });
-
     } catch (error) {
         console.error("Email analytics error:", error);
         res.status(500).json({
-            message: "Failed to get email analytics",
+            message: "Internal Server Error",
             success: false
         });
     }

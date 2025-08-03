@@ -5,6 +5,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Term from './pages/Term';
 import Signin from './pages/Signin';
 import Signup from './pages/Signup';
+import AdminLogin from './pages/AdminLogin';
 import Solution from './pages/Solution';
 import Pricing from './pages/Pricing';
 import Docs from "./pages/Docs";
@@ -32,6 +33,7 @@ const App = () => {
 
         <Route path="/signin" element={<Signin/>}/>
         <Route path="/signup" element={<Signup/>}/>
+        <Route path="/admin/login" element={<AdminLogin/>}/>
 
         <Route path="/dashboard" element={
           <ProtectedRoute>

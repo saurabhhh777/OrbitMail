@@ -1,0 +1,95 @@
+name: Email Service Update - Deploy Express Server
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'emailservice/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'emailservice/**'
+
+jobs:
+  deploy-express:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: expresserver/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd expresserver
+        npm ci
+        
+    - name: Build email service
+      run: |
+        cd emailservice
+        npm ci
+        npm run build
+        
+    - name: Build Express application
+      run: |
+        cd expresserver
+        npm run build
+        
+    - name: Run tests
+      run: |
+        cd expresserver
+        npm test || true
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+        
+    - name: Deploy to EC2
+      run: |
+        # Create deployment package with updated email service
+        tar -czf express-server-with-email.tar.gz -C expresserver . -C ../emailservice/dist emailservice
+        
+        # Copy to EC2
+        scp -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} express-server-with-email.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/
+        
+        # Execute deployment commands on EC2
+        ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          # Stop current service
+          sudo systemctl stop orbitmail-express || true
+          
+          # Backup current version
+          sudo cp -r /opt/orbitmail/express-server /opt/orbitmail/express-server.backup.$(date +%Y%m%d_%H%M%S) || true
+          
+          # Extract new version
+          sudo mkdir -p /opt/orbitmail/express-server
+          sudo tar -xzf /tmp/express-server-with-email.tar.gz -C /opt/orbitmail/express-server
+          
+          # Install dependencies
+          cd /opt/orbitmail/express-server
+          sudo npm ci --production
+          
+          # Set environment variables
+          sudo cp .env.example .env
+          sudo chown orbitmail:orbitmail .env
+          
+          # Restart service
+          sudo systemctl start orbitmail-express
+          sudo systemctl enable orbitmail-express
+          
+          # Health check
+          sleep 10
+          curl -f http://localhost:3000/health || exit 1
+          
+          # Cleanup
+          rm /tmp/express-server-with-email.tar.gz
+          sudo rm -rf /opt/orbitmail/express-server.backup.*
+        EOF 

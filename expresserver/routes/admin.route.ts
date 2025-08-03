@@ -18,14 +18,13 @@ router.route("/signup").post(adminSignup as RequestHandler);
 router.route("/signin").post(adminSignin as RequestHandler);
 router.route("/signout").post(adminSignout as RequestHandler);
 
-// Admin dashboard routes (protected) - temporarily disabled due to TypeScript issues
-// router.get("/dashboard", adminAuth, getAdminDashboard as any);
-// router.get("/users", adminAuth, getUsers as any);
-// router.get("/domains", adminAuth, getDomains as any);
-// router.get("/email-analytics", adminAuth, getEmailAnalytics as any);
+// Admin dashboard routes (protected)
+router.get("/dashboard", adminAuth, getAdminDashboard as any);
+router.get("/users", adminAuth, getUsers as any);
+router.get("/domains", adminAuth, getDomains as any);
+router.get("/email-analytics", adminAuth, getEmailAnalytics as any);
 
 //create the email :
 router.route("/cretaeEmail").post(createEmail as RequestHandler);
-
 
 export default router;

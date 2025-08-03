@@ -12,24 +12,26 @@ declare module "express" {
     }
 }
 
-export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
+export const adminAuth = (req: Request, res: Response, next: NextFunction): void => {
     try {
         const token = req.cookies.adminToken || req.headers.authorization;
 
         if (!token) {
-            return res.status(401).json({
+            res.status(401).json({
                 message: "Unauthorized, please login as admin",
                 success: false,
             });
+            return;
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
 
         if (!decoded || decoded.role !== 'admin') {
-            return res.status(401).json({
+            res.status(401).json({
                 message: "Unauthorized, admin access required",
                 success: false,
             });
+            return;
         }
 
         req.adminId = decoded.id;

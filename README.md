@@ -14,6 +14,7 @@ OrbitMail is a powerful, easy-to-use platform that lets users create and manage 
 - 🔐 **OAuth Authentication** – Sign in with Google, GitHub, or Apple
 - 💳 **Subscription Management** – Free tier (2 emails) and paid plans (5-10 emails)
 - 💰 **Razorpay Integration** – Secure payment processing for subscriptions
+- 🚀 **Custom Email Service** – Built-from-scratch email infrastructure with SMTP client, DNS resolution, and queue management
 
 ## 📦 Use Cases
 
@@ -23,11 +24,12 @@ OrbitMail is a powerful, easy-to-use platform that lets users create and manage 
 
 ## 🏗️ Architecture
 
-The application consists of three main components:
+The application consists of four main components:
 
 1. **Express Server** (`expresserver/`) - Main API server handling user management, domain management, and email operations
 2. **SMTP Server** (`smtpserver/`) - Handles incoming and outgoing email traffic
 3. **Frontend** (`frontend/`) - React-based user interface
+4. **Email Service** (`emailservice/`) - Custom email infrastructure built from scratch
 
 ## 🚀 Quick Start
 
@@ -41,7 +43,7 @@ The application consists of three main components:
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/saurabhhh777/OrbitMail.git
    cd OrbitMail
    ```
 
@@ -55,6 +57,12 @@ The application consists of three main components:
    
    # SMTP Server
    cd ../smtpserver
+   npm install
+   cp env.example .env
+   # Edit .env with your configuration
+   
+   # Email Service
+   cd ../emailservice
    npm install
    cp env.example .env
    # Edit .env with your configuration
@@ -82,6 +90,12 @@ The application consists of three main components:
    EXPRESS_URL=http://localhost:3000
    ```
 
+   **Email Service** (`emailservice/.env`):
+   ```env
+   EMAIL_SERVICE_PORT=3001
+   EXPRESS_URL=http://localhost:3000
+   ```
+
    **Frontend** (`frontend/.env`):
    ```env
    VITE_EXPRESS_URL=http://localhost:3000/api
@@ -97,159 +111,131 @@ The application consists of three main components:
    cd smtpserver
    npm start
    
-   # Terminal 3: Frontend
+   # Terminal 3: Email Service (optional - for custom email sending)
+   cd emailservice
+   npm run dev
+   
+   # Terminal 4: Frontend
    cd frontend
    npm run dev
    ```
 
-5. **Access the application**
-   - Frontend: http://localhost:5173
-   - Express API: http://localhost:3000
-   - SMTP Server: localhost:2525
+## 🔧 Custom Email Service
 
-## 📋 API Endpoints
+The email service provides a complete email infrastructure built from scratch:
 
-### Authentication
+### **Features:**
+- **Custom SMTP Client**: Raw TCP/TLS implementation
+- **DNS Resolution**: MX record lookup and domain verification
+- **Email Queue**: Background processing with retry logic
+- **Authentication**: SPF, DKIM, DMARC validation
+- **Rate Limiting**: Built-in rate limiting for email sending
+
+### **Usage:**
+```typescript
+import { OrbitMailEmailService } from './emailservice/dist/index';
+
+const emailService = new OrbitMailEmailService();
+
+// Add domain
+await emailService.addDomain('example.com', ['mx1.example.com']);
+
+// Send email
+const jobId = await emailService.sendFromDomain(
+  'user@example.com',
+  'recipient@gmail.com',
+  'Test Subject',
+  'Hello, this is a test email!'
+);
+```
+
+## 📊 API Endpoints
+
+### **Authentication**
 - `POST /api/v1/user/signup` - User registration
 - `POST /api/v1/user/signin` - User login
 - `POST /api/v1/user/signout` - User logout
-- `GET /api/v1/user/check` - Check authentication status
+- `GET /api/v1/user/check-status` - Check authentication status
 
-### OAuth Authentication
-- `POST /api/v1/auth/google` - Google OAuth
-- `POST /api/v1/auth/github` - GitHub OAuth
-- `POST /api/v1/auth/apple` - Apple OAuth
-
-### Domain Management
-- `POST /api/v1/userdomain/` - Add new domain
-- `GET /api/v1/userdomain/` - Get all user domains
-- `POST /api/v1/userdomain/verifymxrec` - Verify domain MX records
-
-### Email Operations
-- `POST /api/v1/email/sendEmail` - Send email
-- `GET /api/v1/email/getMail` - Get user emails
-- `POST /api/v1/email/store` - Store incoming email (SMTP)
-
-### Email Prefix Management
-- `POST /api/v1/userdomain/:id/emails` - Add email prefix to domain
+### **Domain Management**
+- `POST /api/v1/userdomain/add` - Add new domain
+- `GET /api/v1/userdomain/all` - Get user domains
+- `POST /api/v1/userdomain/verify` - Verify domain MX records
+- `POST /api/v1/userdomain/:id/emails` - Add email prefix
 - `DELETE /api/v1/userdomain/:id/emails/:prefix` - Remove email prefix
-- `GET /api/v1/userdomain/:id/emails` - Get email prefixes for domain
-- `GET /api/v1/userdomain/:id/mx-records` - Get MX records for domain
 
-### Payment & Subscription
+### **Email Operations**
+- `POST /api/v1/email/send` - Send email
+- `POST /api/v1/email/get` - Get user emails
+- `GET /api/v1/email/analytics` - Get email analytics
+- `GET /api/v1/email/service/status` - Get email service status
+- `GET /api/v1/email/job/:jobId` - Get email job status
+
+### **Payment & Subscription**
+- `GET /api/v1/payment/plans` - Get subscription plans
 - `POST /api/v1/payment/create-order` - Create payment order
 - `POST /api/v1/payment/verify` - Verify payment
-- `GET /api/v1/payment/plans` - Get subscription plans
-- `GET /api/v1/payment/subscription` - Get user subscription status
 
-### Admin (Optional)
-- `POST /api/v1/admin/signup` - Admin registration
-- `POST /api/v1/admin/signin` - Admin login
-- `POST /api/v1/admin/signout` - Admin logout
-
-## 🔧 Configuration
-
-### Domain Setup
-
-To use your domain with OrbitMail:
-
-1. **Add your domain** through the dashboard
-2. **Configure DNS records**:
-   - Add MX records pointing to `mx1.orbitmail.fun` and `mx2.orbitmail.fun`
-   - Priority: 10 for mx1, 20 for mx2
-3. **Verify your domain** using the dashboard verification tool
-
-### Email Configuration
-
-The SMTP server handles:
-- **Incoming emails** - Automatically stored in the database
-- **Outgoing emails** - Sent through the SMTP server
-- **Authentication** - Based on user credentials
+### **Admin (Protected)**
+- `GET /api/v1/admin/dashboard` - Admin dashboard
+- `GET /api/v1/admin/users` - Get all users
+- `GET /api/v1/admin/domains` - Get all domains
+- `GET /api/v1/admin/email-analytics` - Platform email analytics
 
 ## 🛠️ Development
 
-### Project Structure
-
+### **Project Structure**
 ```
 OrbitMail/
-├── expresserver/          # Express API server
-│   ├── config/           # Database configuration
-│   ├── controllers/      # Business logic
-│   ├── middlewares/      # Authentication middleware
-│   ├── models/          # MongoDB schemas
-│   └── routes/          # API routes
-├── smtpserver/          # SMTP server for email handling
-├── frontend/            # React frontend
-│   ├── components/      # React components
-│   ├── pages/          # Page components
-│   ├── store/          # State management
-│   └── lib/            # Utilities
+├── expresserver/          # Main API server
+├── smtpserver/           # SMTP server for email handling
+├── emailservice/         # Custom email infrastructure
+├── frontend/             # React frontend
 └── README.md
 ```
 
-### Database Schema
+### **Building for Production**
+```bash
+# Express Server
+cd expresserver
+npm run build
 
-**Users**: Basic user authentication
-**UserDomains**: Domain management with email addresses
-**EmailSentReceive**: Email storage and retrieval
-**Admin**: Admin user management
+# Email Service
+cd emailservice
+npm run build
 
-### Key Features Implemented
-
-- ✅ User authentication with JWT
-- ✅ Domain management with validation
-- ✅ MX record verification
-- ✅ Email sending and receiving
-- ✅ Secure email storage
-- ✅ Modern React frontend
-- ✅ SMTP server integration
-- ✅ Error handling and validation
+# Frontend
+cd frontend
+npm run build
+```
 
 ## 🔒 Security Features
 
-- JWT-based authentication
-- Password hashing with bcrypt
-- CORS configuration
-- Input validation and sanitization
-- Secure cookie handling
-- Domain validation
+- **JWT Authentication**: Secure token-based authentication
+- **OAuth Integration**: Google, GitHub, Apple sign-in
+- **Email Authentication**: SPF, DKIM, DMARC validation
+- **Rate Limiting**: Prevent abuse and spam
+- **Input Validation**: Comprehensive validation throughout
 
-## 🚀 Deployment
+## 📈 Monitoring
 
-### Production Setup
-
-1. **Environment Variables**: Set production values for all services
-2. **Database**: Use MongoDB Atlas or self-hosted MongoDB
-3. **SMTP**: Configure proper SMTP authentication
-4. **Frontend**: Build and serve static files
-5. **Reverse Proxy**: Use Nginx for load balancing
-
-### Docker Support (Future)
-
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
-```
+- **Email Queue**: Monitor email processing status
+- **Service Health**: Health check endpoints
+- **Analytics**: Email sending/receiving analytics
+- **Admin Dashboard**: Platform-wide monitoring
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
+4. Add tests
 5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue on GitHub
-- Check the documentation
-- Contact the development team
+MIT License - see LICENSE file for details
 
 ---
 
-**OrbitMail** - Professional email management made simple. 
+**Built with ❤️ for Professional Email Management** 
