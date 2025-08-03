@@ -1,5 +1,4 @@
 import { userAuthStore } from "../../store/userAuthStore";
-import Navbar from "./Navbar";
 import {Link} from "react-router-dom";
 
 
@@ -8,8 +7,6 @@ export default function HeroSection() {
 
   return (
     <section className={`${isDarkMode ? "bg-black text-white" : "bg-gray-50 text-black"} min-h-screen`}>
-      {/* Navigation Header */}
-      <Navbar/>
 
 
       {/* Main Hero Content */}

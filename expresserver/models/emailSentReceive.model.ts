@@ -28,7 +28,12 @@ const emailSentReceiveSchema = new mongoose.Schema({
     }
 },{timestamps: true});
 
+// Add indexes for better query performance
+emailSentReceiveSchema.index({ to: 1, createdAt: -1 });
+emailSentReceiveSchema.index({ from: 1, createdAt: -1 });
+emailSentReceiveSchema.index({ createdAt: -1 });
 
 
-const emailSentReceiveModel = mongoose.model("EmailInbox", emailSentReceiveSchema);
+
+const emailSentReceiveModel = mongoose.model("EmailSentReceive", emailSentReceiveSchema);
 export default emailSentReceiveModel;

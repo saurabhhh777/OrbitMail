@@ -4,7 +4,10 @@ import { Sun, Moon } from "lucide-react";
 import { userAuthStore } from "../../store/userAuthStore";
 
 const Navbar = () => {
-  const { isDarkMode, toggleDarkMode } = userAuthStore();
+  const { isDarkMode, toggleDarkMode, Authuser, isLogined, logout } = userAuthStore();
+  
+  console.log("Navbar - Authuser:", Authuser);
+  console.log("Navbar - isLogined:", isLogined);
 
   return (
     <nav
@@ -53,18 +56,37 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center space-x-4 font-poppins">
-        <Link
-          to="/signin"
-          className="hover:text-primary transition-colors font-medium"
-        >
-          Sign In
-        </Link>
-        <Link
-          to="/signup"
-          className="px-6 py-2 rounded-lg transition-colors font-medium border border-current"
-        >
-          Sign Up
-        </Link>
+        {Authuser ? (
+          <>
+            <Link
+              to="/dashboard"
+              className="hover:text-primary transition-colors font-medium"
+            >
+              Dashboard
+            </Link>
+            <button
+              onClick={logout}
+              className="hover:text-primary transition-colors font-medium"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link
+              to="/signin"
+              className="hover:text-primary transition-colors font-medium"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/signup"
+              className="px-6 py-2 rounded-lg transition-colors font-medium border border-current"
+            >
+              Sign Up
+            </Link>
+          </>
+        )}
         <div className="flex justify-center">
           <button
             onClick={toggleDarkMode}

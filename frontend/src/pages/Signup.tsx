@@ -1,15 +1,17 @@
-import { Mail, Lock, Eye, EyeOff, Facebook, Apple } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { FcGoogle } from "react-icons/fc";
+import { FaGithub, FaApple } from 'react-icons/fa';
 import {Link,useNavigate} from "react-router-dom";
 import { userAuthStore } from '../../store/userAuthStore';
 import {Toaster,toast} from "react-hot-toast";
+import Navbar from '../components/Navbar';
 
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const {signup} = userAuthStore();
+  const {signup, googleAuth, githubAuth, appleAuth} = userAuthStore();
   const [isLoading,setIsLoading] = useState(false);
   const navigate = useNavigate();
   
@@ -30,19 +32,38 @@ const Signup = () => {
 
   const handleSignup = async()=>{
     try {
-   
+      // Frontend validation
+      if (!formdata.email || !formdata.password || !formdata.confirmpassword) {
+        toast.error("All fields are required");
+        return;
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formdata.email)) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+
+      // Password validation
+      if (formdata.password.length < 6) {
+        toast.error("Password must be at least 6 characters long");
+        return;
+      }
+
+      // Password confirmation
+      if (formdata.password !== formdata.confirmpassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+
       setIsLoading(true);
       const res = await signup(formdata);
       
-      
-
       if(res){
-
         console.log("handle Signup");
-
         toast.success("Signup Successfully");
         navigate("/dashboard");
-
       }
       
     } catch (error) {
@@ -57,12 +78,25 @@ const Signup = () => {
     finally{
       setIsLoading(false);
     }
-
   }
+
+  const handleGoogleAuth = async () => {
+    toast.success('Google OAuth not configured for development. Please use email/password signup.');
+  };
+
+  const handleGithubAuth = async () => {
+    toast.success('GitHub OAuth not configured for development. Please use email/password signup.');
+  };
+
+  const handleAppleAuth = async () => {
+    toast.success('Apple OAuth not configured for development. Please use email/password signup.');
+  };
 
 
   return (
-    <div className="flex min-h-screen bg-gray-50 justify-center items-center">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="flex justify-center items-center min-h-screen">
 
       <Toaster/>
 
@@ -155,14 +189,23 @@ const Signup = () => {
 
         {/* Social buttons */}
         <div className="flex w-full gap-3 justify-center mt-1 mb-3">
-          <button className="flex-1 flex justify-center items-center px-3 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50">
+          <button 
+            onClick={handleGoogleAuth}
+            className="flex-1 flex justify-center items-center px-3 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50"
+          >
             <FcGoogle size={24} />
           </button>
-          <button className="flex-1 flex justify-center items-center px-3 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50">
-            <Facebook size={19} className="text-gray-500" />
+          <button 
+            onClick={handleGithubAuth}
+            className="flex-1 flex justify-center items-center px-3 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50"
+          >
+            <FaGithub size={19} className="text-gray-500" />
           </button>
-          <button className="flex-1 flex justify-center items-center px-3 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50">
-            <Apple size={19} className="text-gray-500" />
+          <button 
+            onClick={handleAppleAuth}
+            className="flex-1 flex justify-center items-center px-3 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50"
+          >
+            <FaApple size={19} className="text-gray-500" />
           </button>
         </div>
 
@@ -173,6 +216,7 @@ const Signup = () => {
             Sign In
           </Link>
         </div>
+      </div>
       </div>
     </div>
   );

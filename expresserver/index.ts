@@ -6,6 +6,8 @@ import userRouter from "./routes/user.route";
 import adminRouter from "./routes/admin.route";
 import emailRouter from "./routes/email.route";
 import userDomainRouter from "./routes/userDomain.route";
+import oauthRouter from "./routes/oauth.route";
+import paymentRouter from "./routes/payment.route";
 import connectDB from './config/db';
 
 
@@ -42,6 +44,12 @@ app.use("/api/v1/email", emailRouter);
 
 //userDomain Route 
 app.use("/api/v1/userdomain", userDomainRouter);
+
+// OAuth routes
+app.use("/api/v1/auth", oauthRouter);
+
+// Payment routes
+app.use("/api/v1/payment", paymentRouter);
 
 
 

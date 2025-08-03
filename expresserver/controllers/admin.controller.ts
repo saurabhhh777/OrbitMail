@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import admin from '../models/admin.model';
+import userModel from '../models/user.model';
+import userDomainModel from '../models/userDomain.model';
+import emailSentReceiveModel from '../models/emailSentReceive.model';
 
 export const adminSignup = async (req: Request, res: Response) => {
     try {
@@ -123,6 +126,230 @@ export const adminSignout = async (req: Request, res: Response) => {
     }
 }
 
+// Get admin dashboard analytics
+export const getAdminDashboard = async (req: Request, res: Response): Promise<void> => {
+    try {
+        // Get total users
+        const totalUsers = await userModel.countDocuments();
+        
+        // Get users by subscription plan
+        const freeUsers = await userModel.countDocuments({ 'subscription.plan': 'free' });
+        const basicUsers = await userModel.countDocuments({ 'subscription.plan': 'basic' });
+        const premiumUsers = await userModel.countDocuments({ 'subscription.plan': 'premium' });
+        
+        // Get total domains
+        const totalDomains = await userDomainModel.countDocuments();
+        const verifiedDomains = await userDomainModel.countDocuments({ isVerified: true });
+        
+        // Get total emails
+        const totalEmails = await emailSentReceiveModel.countDocuments();
+        
+        // Get recent activity (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentUsers = await userModel.countDocuments({
+            createdAt: { $gte: thirtyDaysAgo }
+        });
+        
+        const recentEmails = await emailSentReceiveModel.countDocuments({
+            createdAt: { $gte: thirtyDaysAgo }
+        });
+
+        // Get monthly subscription revenue
+        const basicRevenue = basicUsers * 999; // ₹999 per month
+        const premiumRevenue = premiumUsers * 1999; // ₹1999 per month
+        const totalRevenue = basicRevenue + premiumRevenue;
+
+        res.json({
+            message: "Admin dashboard data retrieved successfully",
+            success: true,
+            dashboard: {
+                users: {
+                    total: totalUsers,
+                    free: freeUsers,
+                    basic: basicUsers,
+                    premium: premiumUsers,
+                    recent: recentUsers
+                },
+                domains: {
+                    total: totalDomains,
+                    verified: verifiedDomains
+                },
+                emails: {
+                    total: totalEmails,
+                    recent: recentEmails
+                },
+                revenue: {
+                    basic: basicRevenue,
+                    premium: premiumRevenue,
+                    total: totalRevenue
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Admin dashboard error:", error);
+        res.status(500).json({
+            message: "Failed to get admin dashboard data",
+            success: false
+        });
+    }
+};
+
+// Get users list with filters
+export const getUsers = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { page = 1, limit = 10, plan, search } = req.query;
+        
+        const query: any = {};
+        
+        if (plan && plan !== 'all') {
+            query['subscription.plan'] = plan;
+        }
+        
+        if (search) {
+            query.$or = [
+                { email: { $regex: search, $options: 'i' } },
+                { name: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const users = await userModel.find(query)
+            .select('-password')
+            .sort({ createdAt: -1 })
+            .limit(Number(limit))
+            .skip((Number(page) - 1) * Number(limit));
+
+        const totalUsers = await userModel.countDocuments(query);
+
+        res.json({
+            message: "Users retrieved successfully",
+            success: true,
+            users,
+            pagination: {
+                current: Number(page),
+                total: Math.ceil(totalUsers / Number(limit)),
+                totalUsers
+            }
+        });
+
+    } catch (error) {
+        console.error("Get users error:", error);
+        res.status(500).json({
+            message: "Failed to get users",
+            success: false
+        });
+    }
+};
+
+// Get domains list
+export const getDomains = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { page = 1, limit = 10, verified, search } = req.query;
+        
+        const query: any = {};
+        
+        if (verified !== undefined) {
+            query.isVerified = verified === 'true';
+        }
+        
+        if (search) {
+            query.domain = { $regex: search, $options: 'i' };
+        }
+
+        const domains = await userDomainModel.find(query)
+            .populate('userId', 'email name')
+            .sort({ createdAt: -1 })
+            .limit(Number(limit))
+            .skip((Number(page) - 1) * Number(limit));
+
+        const totalDomains = await userDomainModel.countDocuments(query);
+
+        res.json({
+            message: "Domains retrieved successfully",
+            success: true,
+            domains,
+            pagination: {
+                current: Number(page),
+                total: Math.ceil(totalDomains / Number(limit)),
+                totalDomains
+            }
+        });
+
+    } catch (error) {
+        console.error("Get domains error:", error);
+        res.status(500).json({
+            message: "Failed to get domains",
+            success: false
+        });
+    }
+};
+
+// Get email analytics for admin
+export const getEmailAnalytics = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { period = '30days' } = req.query;
+        
+        let start: Date, end: Date = new Date();
+        
+        switch (period) {
+            case '1day':
+                start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+                break;
+            case '7days':
+                start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+                break;
+            case '30days':
+                start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+            default:
+                start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+        }
+
+        const emails = await emailSentReceiveModel.find({
+            createdAt: {
+                $gte: start,
+                $lte: end
+            }
+        }).sort({ createdAt: -1 });
+
+        // Group by date
+        const emailStats = emails.reduce((acc: any, email) => {
+            const date = email.createdAt.toISOString().split('T')[0];
+            if (!acc[date]) {
+                acc[date] = { total: 0 };
+            }
+            acc[date].total++;
+            return acc;
+        }, {});
+
+        const chartData = Object.keys(emailStats).map(date => ({
+            date,
+            total: emailStats[date].total
+        }));
+
+        res.json({
+            message: "Email analytics retrieved successfully",
+            success: true,
+            analytics: {
+                period,
+                startDate: start,
+                endDate: end,
+                totalEmails: emails.length,
+                chartData
+            }
+        });
+
+    } catch (error) {
+        console.error("Email analytics error:", error);
+        res.status(500).json({
+            message: "Failed to get email analytics",
+            success: false
+        });
+    }
+};
+
 export const createEmail = async (req:Request, res:Response) => {
     try {
 
@@ -149,6 +376,4 @@ export const createEmail = async (req:Request, res:Response) => {
             success: false,
         });
     }
-
-
 }

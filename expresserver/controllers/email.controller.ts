@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import emailSentReceiveModel from '../models/emailSentReceive.model';
 import userDomainModel from '../models/userDomain.model';
+import userModel from '../models/user.model';
 import bcryptjs from 'bcryptjs';
 
 // Define the user type
@@ -50,12 +51,21 @@ interface GetMailResponseBody {
 
 export const sendEmail = async (req: Request, res: Response) => {
     try {
-        const { to, subject, text, html,from } = req.body;
+        const { to, subject, text, html, from } = req.body;
         
 
         if (!to || !subject || !text || !from) {
             return res.status(400).json({
                 message: "To, from, subject, and text are required",
+                success: false,
+            });
+        }
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(to) || !emailRegex.test(from)) {
+            return res.status(400).json({
+                message: "Invalid email format",
                 success: false,
             });
         }
@@ -102,13 +112,22 @@ export const getMail = async (req:Request, res: Response) => {
             });
         }
 
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userEmail)) {
+            return res.status(400).json({
+                message: "Invalid email format",
+                success: false
+            });
+        }
+
         // Find all emails where the user is either sender or receiver
         const emails = await emailSentReceiveModel.find({
             $or: [
                 { from: userEmail },
                 { to: userEmail }
             ]
-        }).sort({ createdAt: -1 }); // Sort by timestamp in descending order (newest first)
+        }).sort({ createdAt: -1 }).limit(100); // Sort by timestamp in descending order (newest first) and limit results
 
         if (!emails || emails.length === 0) {
             return res.status(200).json({
@@ -134,6 +153,166 @@ export const getMail = async (req:Request, res: Response) => {
             message: "Emails retrieved successfully",
             success: true,
             emails: formattedEmails
+        });
+
+    } catch (error) {
+        console.log("Server error:", error);
+        res.status(500).json({
+            message: "Internal Server Error",
+            success: false
+        });
+    }
+}
+
+export const storeEmail = async (req: Request, res: Response) => {
+    try {
+        const { from, to, subject, text, html } = req.body;
+
+        if (!from || !to || !subject || !text) {
+            return res.status(400).json({
+                message: "From, to, subject, and text are required",
+                success: false
+            });
+        }
+
+        const newEmail = new emailSentReceiveModel({
+            from,
+            to,
+            subject,
+            text,
+            html: html || undefined
+        });
+
+        await newEmail.save();
+
+        return res.status(200).json({
+            message: "Email stored successfully",
+            success: true
+        });
+
+    } catch (error) {
+        console.log("Server error:", error);
+        res.status(500).json({
+            message: "Internal Server Error",
+            success: false
+        });
+    }
+}
+
+export const getEmailAnalytics = async (req: Request, res: Response) => {
+    try {
+        const { email, period, startDate, endDate } = req.query;
+        const userId = req.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "User not authenticated",
+                success: false
+            });
+        }
+
+        if (!email || !period) {
+            return res.status(400).json({
+                message: "Email and period are required",
+                success: false
+            });
+        }
+
+        // Get user subscription to determine analytics access
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found",
+                success: false
+            });
+        }
+
+        // Calculate date range based on period
+        let start: Date, end: Date = new Date();
+        
+        switch (period) {
+            case '1day':
+                start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+                break;
+            case '7days':
+                start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+                break;
+            case '30days':
+                start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+            case 'custom':
+                if (!startDate || !endDate) {
+                    return res.status(400).json({
+                        message: "Start date and end date are required for custom period",
+                        success: false
+                    });
+                }
+                start = new Date(startDate as string);
+                end = new Date(endDate as string);
+                break;
+            default:
+                return res.status(400).json({
+                    message: "Invalid period. Use: 1day, 7days, 30days, or custom",
+                    success: false
+                });
+        }
+
+        // Check if user has access to custom analytics (paid users only)
+        if (period === 'custom' && user.subscription?.plan === 'free') {
+            return res.status(403).json({
+                message: "Custom date range analytics are only available for paid users",
+                success: false
+            });
+        }
+
+        // Get emails for the specified period
+        const emails = await emailSentReceiveModel.find({
+            $or: [
+                { from: email },
+                { to: email }
+            ],
+            createdAt: {
+                $gte: start,
+                $lte: end
+            }
+        }).sort({ createdAt: -1 });
+
+        // Calculate analytics
+        const sentEmails = emails.filter(emailItem => emailItem.from === email as string);
+        const receivedEmails = emails.filter(emailItem => emailItem.to === email as string);
+
+        // Group by date for chart data
+        const emailStats = emails.reduce((acc: any, emailItem) => {
+            const date = emailItem.createdAt.toISOString().split('T')[0];
+            if (!acc[date]) {
+                acc[date] = { sent: 0, received: 0 };
+            }
+            if (emailItem.from === email as string) {
+                acc[date].sent++;
+            } else {
+                acc[date].received++;
+            }
+            return acc;
+        }, {});
+
+        const chartData = Object.keys(emailStats).map(date => ({
+            date,
+            sent: emailStats[date].sent,
+            received: emailStats[date].received
+        }));
+
+        res.json({
+            message: "Email analytics retrieved successfully",
+            success: true,
+            analytics: {
+                period,
+                startDate: start,
+                endDate: end,
+                totalEmails: emails.length,
+                sentEmails: sentEmails.length,
+                receivedEmails: receivedEmails.length,
+                chartData
+            }
         });
 
     } catch (error) {

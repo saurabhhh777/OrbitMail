@@ -6,13 +6,40 @@ import userModel from '../models/user.model'; // Assuming you have a User model 
 
 export const Signup = async (req:Request, res:Response) => {
     try {
-
+        console.log("Signup request body:", req.body);
+        
         const {email,password,confirmpassword} = req.body;
 
         if ( !email || !password || !confirmpassword) {
+            console.log("Missing fields:", { email: !!email, password: !!password, confirmpassword: !!confirmpassword });
             return res.status(400).json({ 
                 message: "All fields are required",
                 success:false    
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                message: "Please enter a valid email address",
+                success: false,
+            });
+        }
+
+        // Validate password length
+        if (password.length < 6) {
+            return res.status(400).json({
+                message: "Password must be at least 6 characters long",
+                success: false,
+            });
+        }
+
+        // Check if passwords match
+        if (password !== confirmpassword) {
+            return res.status(400).json({
+                message: "Passwords do not match",
+                success: false,
             });
         }
 
@@ -61,6 +88,10 @@ export const Signup = async (req:Request, res:Response) => {
 export const Signin = async (req:Request,res:Response)=>{
     try {
         const { email, password } = req.body;
+
+        console.log("Signin Data from Signin route :");
+        console.log(`email : ${email} , password : ${password}`);
+
         if (!email || !password) {
             return res.status(400).json({
                 message: "All fields are required",
@@ -68,7 +99,10 @@ export const Signin = async (req:Request,res:Response)=>{
             });
         }
 
-        const user = await userModel.findOne({ email });
+    
+        const user = await userModel.findOne({ email:email });
+
+        console.log(`Signin from the backend : ${user}`);
         if (!user) {
             return res.status(400).json({
                 message: "User not found",
@@ -76,7 +110,10 @@ export const Signin = async (req:Request,res:Response)=>{
             });
         }
 
-        const isPasswordValid = bcryptjs.compareSync(password, user.password);
+
+        const isPasswordValid = bcryptjs.compareSync(password, user.password || '');
+
+        console.log(`Password : ${isPasswordValid}`);
 
         if( !isPasswordValid) {
             return res.status(400).json({
@@ -165,6 +202,75 @@ export const createEmail = async (req:Request, res:Response) => {
             success: false,
         });
     }
+}
 
+export const checkAuth = async (req:Request, res:Response) => {
+    try {
+        const userId = req.id;
 
+        if (!userId) {
+            return res.status(401).json({
+                message: "User not authenticated",
+                success: false,
+            });
+        }
+
+        const user = await userModel.findById(userId).select('-password');
+
+        if (!user) {
+            return res.status(401).json({
+                message: "User not found",
+                success: false,
+            });
+        }
+
+        return res.status(200).json({
+            message: "User authenticated",
+            success: true,
+            data: user,
+        });
+
+    } catch (error) {
+        console.log("Server error:", error);
+        res.status(500).json({
+            message: "Internal Server Error",
+            success: false,
+        });
+    }
+}
+
+export const checkAuthStatus = async (req:Request, res:Response) => {
+    try {
+        const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
+
+        if (!token) {
+            return res.status(401).json({
+                message: "No token provided",
+                success: false,
+            });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
+        const user = await userModel.findById(decoded.id).select('-password');
+
+        if (!user) {
+            return res.status(401).json({
+                message: "User not found",
+                success: false,
+            });
+        }
+
+        return res.status(200).json({
+            message: "User authenticated",
+            success: true,
+            data: user,
+        });
+
+    } catch (error) {
+        console.log("Server error:", error);
+        res.status(401).json({
+            message: "Invalid token",
+            success: false,
+        });
+    }
 }

@@ -47,20 +47,27 @@ const server = new SMTPServer({
 
       console.log("✅ Email received & parsed:", emailData);
 
-      // Optional: Send to your backend (e.g., to store in DB)
+      // Send to your backend to store in DB
       try {
-        await axios.post(`${process.env.EXPRESS_URL}`, emailData);
-        console.log("📤 Email sent to backend");
+        await axios.post(`${process.env.EXPRESS_URL}/api/v1/email/store`, emailData);
+        console.log("📤 Email stored in database");
       } catch (error) {
-        console.error("❌ Failed to send to backend:", error);
+        console.error("❌ Failed to store email in database:", error);
       }
 
       cb(); // Done
     });
+  },
+
+  // Handle authentication
+  onAuth(auth, session, callback) {
+    console.log(`🔐 Auth attempt: ${auth.username}`);
+    // In production, validate against your user database
+    callback(null, { user: auth.username });
   }
 });
 
-const PORT = 2525; // Choose an open port
+const PORT = process.env.SMTP_PORT || 2525;
 server.listen(PORT, () => {
   console.log(`🚀 SMTP server is running and listening on port ${PORT}`);
 });

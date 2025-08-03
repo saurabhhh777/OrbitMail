@@ -1,4 +1,5 @@
 import { BrowserRouter as Router , Route , Routes } from 'react-router-dom';
+import { useEffect } from 'react';
 import Home from "./pages/Home";
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Term from './pages/Term';
@@ -12,9 +13,18 @@ import Blog from "./pages/Blog";
 import Roadmap from './pages/Roadmap';
 import ErrorPage from './pages/ErrorPage';
 import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
+import { userAuthStore } from '../store/userAuthStore';
 
 
 const App = () => {
+  const { checkAuth } = userAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, []); // Remove checkAuth from dependency array to prevent infinite loop
+
   return (
     <Router>
       <Routes>
@@ -23,7 +33,12 @@ const App = () => {
         <Route path="/signin" element={<Signin/>}/>
         <Route path="/signup" element={<Signup/>}/>
 
-        <Route path="/dashboard" element={<Dashboard/>}/>
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard/>
+          </ProtectedRoute>
+        }/>
+        <Route path="/admin" element={<AdminDashboard/>}/>
 
         <Route path="/solution" element={<Solution/>}/>
         <Route path="/pricing" element={<Pricing/>}/>

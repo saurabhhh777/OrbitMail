@@ -24,5 +24,3 @@ OrbitMail is a powerful, easy-to-use platform that lets users create and manage 
 
 
 ## ScreenShort
-
-

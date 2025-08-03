@@ -1,14 +1,28 @@
 import express, { RequestHandler } from "express";
 
 const router = express.Router();
-import { Signup , Signin , Signout,createEmail } from "../controllers/user.controller";
+import { 
+  adminSignup, 
+  adminSignin, 
+  adminSignout, 
+  createEmail,
+  getAdminDashboard,
+  getUsers,
+  getDomains,
+  getEmailAnalytics
+} from "../controllers/admin.controller";
+import { adminAuth } from "../middlewares/adminAuth.middleware";
 
+// Authentication routes
+router.route("/signup").post(adminSignup as RequestHandler);
+router.route("/signin").post(adminSignin as RequestHandler);
+router.route("/signout").post(adminSignout as RequestHandler);
 
-
-router.route("/signup").post(Signup as RequestHandler);
-router.route("/signin").post(Signin as RequestHandler);
-router.route("/signout").post(Signout as RequestHandler);
-
+// Admin dashboard routes (protected) - temporarily disabled due to TypeScript issues
+// router.get("/dashboard", adminAuth, getAdminDashboard as any);
+// router.get("/users", adminAuth, getUsers as any);
+// router.get("/domains", adminAuth, getDomains as any);
+// router.get("/email-analytics", adminAuth, getEmailAnalytics as any);
 
 //create the email :
 router.route("/cretaeEmail").post(createEmail as RequestHandler);
