@@ -9,6 +9,7 @@ import userDomainRouter from "./routes/userDomain.route";
 import oauthRouter from "./routes/oauth.route";
 import paymentRouter from "./routes/payment.route";
 import connectDB from './config/db';
+import { setupAdminAccount } from './config/admin-setup';
 
 
 dotenv.config();
@@ -17,6 +18,9 @@ const app = express();
 
 // Connect to the database
 connectDB();
+
+// Setup admin account if enabled
+setupAdminAccount();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

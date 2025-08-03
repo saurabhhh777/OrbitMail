@@ -2,31 +2,37 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
-// Admin model (same as in expresserver/models/admin.model.ts)
+// Define admin schema (same as admin.model.ts)
 const adminSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    password: {
-        type: String,
-        required: true
-    }
-}, {
-    timestamps: true
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-const Admin = mongoose.model('Admin', adminSchema);
+const Admin = mongoose.model("Admin", adminSchema);
 
 async function createAdmin() {
     try {
-        // Connect to MongoDB
-        await mongoose.connect(process.env.MONGODB_URL || 'mongodb://localhost:27017/orbitmail');
+        // Connect to MongoDB with correct database name
+        const mongoUrl = process.env.MONGODB_URL || 'mongodb://localhost:27017/orbitmail';
+        await mongoose.connect(mongoUrl, {
+            dbName: 'orbitmail_db'
+        });
         console.log('Connected to MongoDB');
 
         // Check if admin already exists
@@ -40,13 +46,13 @@ async function createAdmin() {
         // Create admin account
         const hashedPassword = await bcrypt.hash('admin123', 10);
         
-        const admin = new Admin({
+        const newAdmin = new Admin({
             name: 'OrbitMail Admin',
             email: 'admin@orbitmail.com',
             password: hashedPassword
         });
 
-        await admin.save();
+        await newAdmin.save();
         console.log('✅ Admin account created successfully!');
         console.log('📧 Email: admin@orbitmail.com');
         console.log('🔑 Password: admin123');
