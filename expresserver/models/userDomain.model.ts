@@ -16,8 +16,10 @@ const UserDomainSchema = new mongoose.Schema({
   mxRecords: {
     mx1: { type: String, default: 'mx1.orbitmail.fun' },
     mx2: { type: String, default: 'mx2.orbitmail.fun' },
+    mx3: { type: String, default: 'mx3.orbitmail.fun' },
     priority1: { type: Number, default: 10 },
-    priority2: { type: Number, default: 20 }
+    priority2: { type: Number, default: 20 },
+    priority3: { type: Number, default: 30 }
   },
 
   emails: {

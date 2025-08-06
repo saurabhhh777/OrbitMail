@@ -61,11 +61,14 @@ export const addDomain = async (req: Request, res: Response) => {
       mxRecords: {
         mx1: 'mx1.orbitmail.fun',
         mx2: 'mx2.orbitmail.fun',
+        mx3: 'mx3.orbitmail.fun',
         priority1: 10,
         priority2: 20,
+        priority3: 30,
         instructions: [
           'Add MX record with priority 10 pointing to mx1.orbitmail.fun',
-          'Add MX record with priority 20 pointing to mx2.orbitmail.fun'
+          'Add MX record with priority 20 pointing to mx2.orbitmail.fun',
+          'Add MX record with priority 30 pointing to mx3.orbitmail.fun'
         ]
       }
     });
@@ -107,7 +110,8 @@ export const VerifyMXRec = async (req: Request, res: Response) => {
 
       const hasMX1 = mxHosts.includes('mx1.orbitmail.fun');
       const hasMX2 = mxHosts.includes('mx2.orbitmail.fun');
-      const isVerified = hasMX1 && hasMX2;
+      const hasMX3 = mxHosts.includes('mx3.orbitmail.fun');
+      const isVerified = hasMX1 && hasMX2 && hasMX3;
 
       // Update DB if verified
       if (isVerified) {
@@ -128,6 +132,7 @@ export const VerifyMXRec = async (req: Request, res: Response) => {
         missing: [
           !hasMX1 ? 'mx1.orbitmail.fun' : null,
           !hasMX2 ? 'mx2.orbitmail.fun' : null,
+          !hasMX3 ? 'mx3.orbitmail.fun' : null,
         ].filter(Boolean),
         success: true,
       });
@@ -217,11 +222,14 @@ export const getMxRecords = async (req: Request, res: Response) => {
     const mxRecords = {
       mx1: 'mx1.orbitmail.fun',
       mx2: 'mx2.orbitmail.fun',
+      mx3: 'mx3.orbitmail.fun',
       priority1: 10,
       priority2: 20,
+      priority3: 30,
       instructions: [
         'Add MX record with priority 10 pointing to mx1.orbitmail.fun',
-        'Add MX record with priority 20 pointing to mx2.orbitmail.fun'
+        'Add MX record with priority 20 pointing to mx2.orbitmail.fun',
+        'Add MX record with priority 30 pointing to mx3.orbitmail.fun'
       ]
     };
 
