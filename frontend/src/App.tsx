@@ -14,6 +14,7 @@ import Blog from "./pages/Blog";
 import Roadmap from './pages/Roadmap';
 import ErrorPage from './pages/ErrorPage';
 import Dashboard from './pages/Dashboard';
+import ComposeEmail from './pages/ComposeEmail';
 import AdminDashboard from './pages/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import { userAuthStore } from '../store/userAuthStore';
@@ -38,6 +39,11 @@ const App = () => {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard/>
+          </ProtectedRoute>
+        }/>
+        <Route path="/compose" element={
+          <ProtectedRoute>
+            <ComposeEmail/>
           </ProtectedRoute>
         }/>
         <Route path="/admin" element={<AdminDashboard/>}/>

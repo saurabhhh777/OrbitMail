@@ -5,6 +5,7 @@ import * as dns from "dns";
 import {promisify} from "util";
 import userDomainModel from '../models/userDomain.model';
 import userModel from '../models/user.model';
+import emailSentReceiveModel from '../models/emailSentReceive.model';
 
 const saltRounds = 10;
 
@@ -417,6 +418,7 @@ export const deleteDomain = async (req: Request, res: Response) => {
 
 // Store OTPs temporarily (in production, use Redis or database)
 const otpStore = new Map<string, { otp: string; email: string; expiresAt: number }>();
+const domainOtpStore = new Map<string, { otp: string; domainId: string; expiresAt: number }>();
 
 // Send OTP for email deletion
 export const sendOtpForEmailDeletion = async (req: Request, res: Response) => {
@@ -519,6 +521,217 @@ export const verifyOtpAndDeleteEmail = async (req: Request, res: Response) => {
     res.json({
       message: 'Email deleted successfully',
       success: true
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', success: false });
+  }
+};
+
+// Get domain analytics
+export const getDomainAnalytics = async (req: Request, res: Response) => {
+  try {
+    const { domainId } = req.params;
+    const userId = req.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated', success: false });
+    }
+
+    if (!domainId) {
+      return res.status(400).json({ message: 'Domain ID is required', success: false });
+    }
+
+    // Find the domain
+    const domain = await userDomainModel.findOne({ _id: domainId, userId });
+    if (!domain) {
+      return res.status(404).json({ message: 'Domain not found', success: false });
+    }
+
+    // Get email analytics from the emailSentReceive model
+    const emailAnalytics = await emailSentReceiveModel.aggregate([
+      {
+        $match: {
+          $or: [
+            { from: { $regex: `@${domain.domain}$` } },
+            { to: { $regex: `@${domain.domain}$` } }
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+          },
+          sent: {
+            $sum: {
+              $cond: [
+                { $regexMatch: { input: "$from", regex: `@${domain.domain}$` } },
+                1,
+                0
+              ]
+            }
+          },
+          received: {
+            $sum: {
+              $cond: [
+                { $regexMatch: { input: "$to", regex: `@${domain.domain}$` } },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      },
+      {
+        $limit: 7 // Last 7 days
+      }
+    ]);
+
+    // Calculate totals
+    const totalSent = emailAnalytics.reduce((sum: number, day: any) => sum + day.sent, 0);
+    const totalReceived = emailAnalytics.reduce((sum: number, day: any) => sum + day.received, 0);
+    const totalEmails = totalSent + totalReceived;
+
+    // Format chart data
+    const chartData = emailAnalytics.map((day: any) => ({
+      date: new Date(day._id).toLocaleDateString('en-US', { weekday: 'short' }),
+      sent: day.sent,
+      received: day.received
+    }));
+
+    // If no data, provide empty chart data for the last 7 days
+    if (chartData.length === 0) {
+      const last7Days = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        last7Days.push({
+          date: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          sent: 0,
+          received: 0
+        });
+      }
+      chartData.push(...last7Days);
+    }
+
+    res.json({
+      message: 'Domain analytics retrieved successfully',
+      success: true,
+      analytics: {
+        totalEmails,
+        sentEmails: totalSent,
+        receivedEmails: totalReceived,
+        chartData
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', success: false });
+  }
+};
+
+// Send OTP for domain deletion
+export const sendOtpForDomainDeletion = async (req: Request, res: Response) => {
+  try {
+    const { domainId } = req.body;
+    const userId = req.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated', success: false });
+    }
+
+    if (!domainId) {
+      return res.status(400).json({ message: 'Domain ID is required', success: false });
+    }
+
+    // Find the domain
+    const domain = await userDomainModel.findOne({ _id: domainId, userId });
+    if (!domain) {
+      return res.status(404).json({ message: 'Domain not found', success: false });
+    }
+
+    // Get user's email
+    const user = await userModel.findById(userId);
+    if (!user || !user.email) {
+      return res.status(400).json({ message: 'User email not found', success: false });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Store OTP
+    domainOtpStore.set(userId, { otp, domainId, expiresAt });
+
+    // In a real implementation, send email here
+    // For now, we'll just log it
+    console.log(`Domain deletion OTP for ${user.email}: ${otp}`);
+    console.log(`Email content: This is your OTP for deleting domain ${domain.domain} from OrbitMail: ${otp}`);
+
+    res.json({
+      message: 'OTP sent successfully',
+      success: true,
+      userEmail: user.email
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', success: false });
+  }
+};
+
+// Verify OTP and delete domain
+export const verifyOtpAndDeleteDomain = async (req: Request, res: Response) => {
+  try {
+    const { domainId, otp } = req.body;
+    const userId = req.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated', success: false });
+    }
+
+    if (!domainId || !otp) {
+      return res.status(400).json({ message: 'Domain ID and OTP are required', success: false });
+    }
+
+    // Get stored OTP
+    const storedData = domainOtpStore.get(userId);
+    if (!storedData) {
+      return res.status(400).json({ message: 'No OTP found. Please request a new one.', success: false });
+    }
+
+    // Check if OTP is expired
+    if (Date.now() > storedData.expiresAt) {
+      domainOtpStore.delete(userId);
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.', success: false });
+    }
+
+    // Check if domain ID matches
+    if (storedData.domainId !== domainId) {
+      return res.status(400).json({ message: 'Domain mismatch', success: false });
+    }
+
+    // Verify OTP
+    if (storedData.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP', success: false });
+    }
+
+    // Delete the domain
+    const deletedDomain = await userDomainModel.findOneAndDelete({ _id: domainId, userId });
+    if (!deletedDomain) {
+      return res.status(404).json({ message: 'Domain not found', success: false });
+    }
+
+    // Clear OTP
+    domainOtpStore.delete(userId);
+
+    res.json({
+      message: 'Domain deleted successfully',
+      success: true,
+      deletedDomain: deletedDomain.domain
     });
   } catch (error) {
     console.error(error);

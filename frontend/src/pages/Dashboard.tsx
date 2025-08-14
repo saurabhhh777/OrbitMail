@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { userAuthStore } from "../../store/userAuthStore";
 import { Toaster, toast } from "react-hot-toast";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -49,18 +50,22 @@ interface Subscription {
 }
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { 
     getAllDomain, 
     addDomain, 
     verifyDomain, 
+    removeDomain,
     getEmailPrefixes,
     addEmailPrefix,
     removeEmailPrefix,
     sendOtpForEmailDeletion,
     verifyOtpAndDeleteEmail,
+    sendOtpForDomainDeletion,
+    verifyOtpAndDeleteDomain,
+    getDomainAnalytics,
     getEmailAnalytics,
-    getUserSubscription,
-    sendEmail
+    getUserSubscription
   } = userAuthStore();
   
   const [domains, setDomains] = useState<Domain[]>([]);
@@ -78,17 +83,16 @@ const Dashboard: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [analyticsPeriod, setAnalyticsPeriod] = useState<string>("7days");
   const [selectedEmail, setSelectedEmail] = useState<string>("");
-  const [showEmailForm, setShowEmailForm] = useState<boolean>(false);
   const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
   const [otpEmail, setOtpEmail] = useState<string>("");
   const [otpCode, setOtpCode] = useState<string>("");
   const [otpLoading, setOtpLoading] = useState<boolean>(false);
-  const [emailForm, setEmailForm] = useState({
-    to: "",
-    subject: "",
-    text: "",
-    from: ""
-  });
+  
+  // Domain deletion OTP state
+  const [showDomainOtpModal, setShowDomainOtpModal] = useState<boolean>(false);
+  const [domainToDelete, setDomainToDelete] = useState<any>(null);
+  const [domainOtpCode, setDomainOtpCode] = useState<string>("");
+  const [domainOtpLoading, setDomainOtpLoading] = useState<boolean>(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -259,6 +263,58 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleRemoveDomain = async (domain: any) => {
+    if (domain.isVerified) {
+      // For verified domains, show OTP modal
+      setDomainToDelete(domain);
+      setShowDomainOtpModal(true);
+    } else {
+      // For unverified domains, show confirmation alert
+      if (window.confirm(`Are you sure you want to delete the domain "${domain.domain}"? This action cannot be undone.`)) {
+        try {
+          await removeDomain(domain._id);
+          toast.success("Domain deleted successfully");
+          await fetchData();
+        } catch (error: any) {
+          toast.error(error.message || "Failed to delete domain");
+        }
+      }
+    }
+  };
+
+  const handleSendDomainOtp = async () => {
+    try {
+      setDomainOtpLoading(true);
+      await sendOtpForDomainDeletion(domainToDelete._id);
+      toast.success("OTP sent to your email. Please check your inbox.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send OTP");
+    } finally {
+      setDomainOtpLoading(false);
+    }
+  };
+
+  const handleVerifyDomainOtpAndDelete = async () => {
+    if (!domainOtpCode.trim()) {
+      toast.error("Please enter the OTP");
+      return;
+    }
+
+    try {
+      setDomainOtpLoading(true);
+      await verifyOtpAndDeleteDomain(domainToDelete._id, domainOtpCode);
+      toast.success("Domain deleted successfully");
+      setShowDomainOtpModal(false);
+      setDomainOtpCode("");
+      setDomainToDelete(null);
+      await fetchData();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to verify OTP");
+    } finally {
+      setDomainOtpLoading(false);
+    }
+  };
+
   const loadEmailPrefixes = async (domainId: string) => {
     try {
       const res = await getEmailPrefixes(domainId);
@@ -289,44 +345,31 @@ const Dashboard: React.FC = () => {
 
   const loadDomainAnalytics = async (domainId: string) => {
     try {
-      // Mock domain analytics data for now
-      const mockData = {
-        totalEmails: Math.floor(Math.random() * 1000) + 100,
-        sentEmails: Math.floor(Math.random() * 500) + 50,
-        receivedEmails: Math.floor(Math.random() * 500) + 50,
-        chartData: [
-          { date: 'Mon', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
-          { date: 'Tue', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
-          { date: 'Wed', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
-          { date: 'Thu', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
-          { date: 'Fri', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
-          { date: 'Sat', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
-          { date: 'Sun', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
-        ]
-      };
-      setDomainAnalytics(mockData);
-    } catch (error: any) {
-      console.error("Error loading domain analytics:", error);
-    }
-  };
-
-  const handleSendEmail = async () => {
-    if (!emailForm.to || !emailForm.subject || !emailForm.text || !emailForm.from) {
-      toast.error("Please fill all email fields");
-      return;
-    }
-
-    try {
-      const res = await sendEmail(emailForm);
-      if (res?.success) {
-        toast.success("Email sent successfully");
-        setEmailForm({ to: "", subject: "", text: "", from: "" });
-        setShowEmailForm(false);
+      const res = await getDomainAnalytics(domainId);
+      if (res?.success && res?.analytics) {
+        setDomainAnalytics(res.analytics);
+      } else {
+        // If no data, set empty analytics
+        setDomainAnalytics({
+          totalEmails: 0,
+          sentEmails: 0,
+          receivedEmails: 0,
+          chartData: []
+        });
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to send email");
+      console.error("Error loading domain analytics:", error);
+      // Set empty analytics on error
+      setDomainAnalytics({
+        totalEmails: 0,
+        sentEmails: 0,
+        receivedEmails: 0,
+        chartData: []
+      });
     }
   };
+
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -452,20 +495,32 @@ const Dashboard: React.FC = () => {
                           <span>Emails: {domain.emails.length}</span>
                         </div>
                         
-                        <button 
-                          className={`px-3 py-1 rounded text-sm font-medium ${
-                            domain.isVerified
-                              ? "bg-gray-100 text-gray-800"
-                              : "bg-green-600 hover:bg-green-700 text-white"
-                          } disabled:bg-gray-300`}
-                          disabled={domain.isVerified || verifying[domain._id]}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleVerifyDomain(domain._id, domain.domain);
-                          }}
-                        >
-                          {verifying[domain._id] ? "Verifying..." : domain.isVerified ? "Verified" : "Verify"}
-                        </button>
+                        <div className="flex gap-2">
+                          <button 
+                            className={`px-3 py-1 rounded text-sm font-medium ${
+                              domain.isVerified
+                                ? "bg-gray-100 text-gray-800"
+                                : "bg-green-600 hover:bg-green-700 text-white"
+                            } disabled:bg-gray-300`}
+                            disabled={domain.isVerified || verifying[domain._id]}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleVerifyDomain(domain._id, domain.domain);
+                            }}
+                          >
+                            {verifying[domain._id] ? "Verifying..." : domain.isVerified ? "Verified" : "Verify"}
+                          </button>
+                          
+                          <button 
+                            className="px-3 py-1 rounded text-sm font-medium bg-red-600 hover:bg-red-700 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveDomain(domain);
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -519,12 +574,20 @@ const Dashboard: React.FC = () => {
                     {emailPrefixes.map((email, index) => (
                       <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                         <span className="font-mono">{email.fullEmail}</span>
-                        <button
-                          onClick={() => handleRemoveEmailPrefix(email.prefix)}
-                          className="text-red-600 hover:text-red-800 text-sm"
-                        >
-                          Remove
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => navigate(`/compose?from=${encodeURIComponent(email.fullEmail)}`)}
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Compose
+                          </button>
+                          <button
+                            onClick={() => handleRemoveEmailPrefix(email.prefix)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -555,19 +618,26 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={domainAnalytics.chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="sent" stroke="#10B981" strokeWidth={2} />
-                    <Line type="monotone" dataKey="received" stroke="#3B82F6" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              {domainAnalytics.chartData && domainAnalytics.chartData.length > 0 ? (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={domainAnalytics.chartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="sent" stroke="#10B981" strokeWidth={2} />
+                      <Line type="monotone" dataKey="received" stroke="#3B82F6" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No email activity data available for this domain yet.</p>
+                  <p className="text-sm mt-2">Send or receive emails to see analytics here.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -651,53 +721,15 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Send Email</h2>
               <button
-                onClick={() => setShowEmailForm(!showEmailForm)}
+                onClick={() => navigate('/compose')}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
               >
-                {showEmailForm ? 'Cancel' : 'Compose Email'}
+                Compose Email
               </button>
             </div>
-
-            {showEmailForm && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="email"
-                    value={emailForm.from}
-                    onChange={(e) => setEmailForm({...emailForm, from: e.target.value})}
-                    placeholder="From (your email)"
-                    className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="email"
-                    value={emailForm.to}
-                    onChange={(e) => setEmailForm({...emailForm, to: e.target.value})}
-                    placeholder="To"
-                    className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <input
-                  type="text"
-                  value={emailForm.subject}
-                  onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})}
-                  placeholder="Subject"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <textarea
-                  value={emailForm.text}
-                  onChange={(e) => setEmailForm({...emailForm, text: e.target.value})}
-                  placeholder="Email content"
-                  rows={4}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={handleSendEmail}
-                  className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition-colors"
-                >
-                  Send Email
-                </button>
-              </div>
-            )}
+            <p className="text-gray-600">
+              Click "Compose Email" to create and send a new email from your verified domains.
+            </p>
           </div>
         </div>
       </div>
@@ -745,6 +777,60 @@ const Dashboard: React.FC = () => {
                     setShowOtpModal(false);
                     setOtpCode("");
                     setOtpEmail("");
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Domain Deletion OTP Modal */}
+      {showDomainOtpModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Verify Domain Deletion</h3>
+            <p className="text-gray-600 mb-4">
+              We'll send an OTP to your email to confirm the deletion of domain <strong>{domainToDelete?.domain}</strong>
+            </p>
+            
+            <div className="space-y-4">
+              <button
+                onClick={handleSendDomainOtp}
+                disabled={domainOtpLoading}
+                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                {domainOtpLoading ? "Sending..." : "Send OTP"}
+              </button>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Enter OTP</label>
+                <input
+                  type="text"
+                  value={domainOtpCode}
+                  onChange={(e) => setDomainOtpCode(e.target.value)}
+                  placeholder="Enter 6-digit OTP"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={6}
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={handleVerifyDomainOtpAndDelete}
+                  disabled={domainOtpLoading || !domainOtpCode.trim()}
+                  className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 disabled:bg-gray-400"
+                >
+                  {domainOtpLoading ? "Verifying..." : "Delete Domain"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDomainOtpModal(false);
+                    setDomainOtpCode("");
+                    setDomainToDelete(null);
                   }}
                   className="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
                 >

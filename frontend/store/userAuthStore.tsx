@@ -56,6 +56,7 @@ interface AuthStore {
   getAllDomain:()=> Promise<any>;
   verifyDomain:(domain:string)=>Promise<any>;
   getMxRecords: (domainId: string) => Promise<any>;
+  removeDomain: (domainId: string) => Promise<any>;
   
   // Email prefix methods
   addEmailPrefix: (domainId: string, prefix: string, password: string) => Promise<any>;
@@ -65,6 +66,13 @@ interface AuthStore {
   // OTP methods for email deletion
   sendOtpForEmailDeletion: (email: string) => Promise<any>;
   verifyOtpAndDeleteEmail: (email: string, otp: string) => Promise<any>;
+  
+  // OTP methods for domain deletion
+  sendOtpForDomainDeletion: (domainId: string) => Promise<any>;
+  verifyOtpAndDeleteDomain: (domainId: string, otp: string) => Promise<any>;
+  
+  // Domain analytics methods
+  getDomainAnalytics: (domainId: string) => Promise<any>;
   
   // Email methods
   sendEmail: (emailData: any) => Promise<any>;
@@ -276,6 +284,18 @@ export const userAuthStore = create<AuthStore>()(
         }
       },
 
+      removeDomain: async (domainId: string) => {
+        try {
+          const res = await axiosInstance.delete(`/api/v1/userdomain/${domainId}`, {
+            withCredentials: true
+          });
+          return res.data;
+        } catch (error: any) {
+          console.log(error);
+          throw new Error(error.response?.data?.message || "Failed to remove domain");
+        }
+      },
+
       // Email prefix methods
       addEmailPrefix: async (domainId: string, prefix: string, password: string) => {
         try {
@@ -338,6 +358,44 @@ export const userAuthStore = create<AuthStore>()(
         } catch (error: any) {
           console.log(error);
           throw new Error(error.response?.data?.message || "Failed to verify OTP and delete email");
+        }
+      },
+
+      // OTP methods for domain deletion
+      sendOtpForDomainDeletion: async (domainId: string) => {
+        try {
+          const res = await axiosInstance.post("/api/v1/userdomain/send-domain-otp", { domainId }, {
+            withCredentials: true
+          });
+          return res.data;
+        } catch (error: any) {
+          console.log(error);
+          throw new Error(error.response?.data?.message || "Failed to send OTP");
+        }
+      },
+
+      verifyOtpAndDeleteDomain: async (domainId: string, otp: string) => {
+        try {
+          const res = await axiosInstance.post("/api/v1/userdomain/verify-domain-otp-delete", { domainId, otp }, {
+            withCredentials: true
+          });
+          return res.data;
+        } catch (error: any) {
+          console.log(error);
+          throw new Error(error.response?.data?.message || "Failed to verify OTP and delete domain");
+        }
+      },
+
+      // Domain analytics methods
+      getDomainAnalytics: async (domainId: string) => {
+        try {
+          const res = await axiosInstance.get(`/api/v1/userdomain/${domainId}/analytics`, {
+            withCredentials: true
+          });
+          return res.data;
+        } catch (error: any) {
+          console.log(error);
+          throw new Error(error.response?.data?.message || "Failed to get domain analytics");
         }
       },
 
