@@ -99,7 +99,7 @@ export const userAuthStore = create<AuthStore>()(
       isUpdateProfile: false,
       isCheckingAuth: true,
 
-      isDarkMode: true,
+      isDarkMode: false,
       temp: true,
 
       toggleDarkMode: () => {

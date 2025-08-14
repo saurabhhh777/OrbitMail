@@ -21,11 +21,24 @@ import { userAuthStore } from '../store/userAuthStore';
 
 
 const App = () => {
-  const { checkAuth } = userAuthStore();
+  const { checkAuth, isDarkMode } = userAuthStore();
 
   useEffect(() => {
     checkAuth();
   }, []); // Remove checkAuth from dependency array to prevent infinite loop
+
+  useEffect(() => {
+    // Apply dark mode to body element
+    if (isDarkMode) {
+      document.body.classList.add('dark');
+      document.body.style.backgroundColor = '#0A0A0A';
+      document.body.style.color = '#FAFAFA';
+    } else {
+      document.body.classList.remove('dark');
+      document.body.style.backgroundColor = '#FAFAFA';
+      document.body.style.color = '#0A0A0A';
+    }
+  }, [isDarkMode]);
 
   return (
     <Router>

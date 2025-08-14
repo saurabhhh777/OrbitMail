@@ -384,49 +384,77 @@ const Dashboard: React.FC = () => {
 
 
 
+  const { isDarkMode } = userAuthStore();
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className={`min-h-screen flex items-center justify-center ${
+        isDarkMode ? "bg-[#0A0A0A]" : "bg-[#FAFAFA]"
+      }`}>
+        <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
+          isDarkMode ? "border-[#3B82F6]" : "border-[#3B82F6]"
+        }`}></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-200 ${
+      isDarkMode ? "bg-[#0A0A0A]" : "bg-[#FAFAFA]"
+    }`}>
       <Navbar />
       <div className="p-6">
         <Toaster />
         <div className="max-w-7xl mx-auto">
           <header className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">
+            <h1 className={`text-3xl font-bold font-poppins ${
+              isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+            }`}>
               OrbitMail Dashboard
             </h1>
-            <p className="text-gray-600">
+            <p className={`font-jost ${
+              isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+            }`}>
               Manage your domains, emails, and analytics
             </p>
           </header>
 
           {/* Subscription Status */}
           {subscription && (
-            <div className="bg-white rounded-lg shadow p-6 mb-8">
-              <h2 className="text-xl font-semibold mb-4">Subscription Status</h2>
+            <div className={`rounded-lg shadow p-6 mb-8 border transition-colors duration-200 ${
+              isDarkMode 
+                ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+                : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+            }`}>
+              <h2 className={`text-xl font-semibold mb-4 font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>Subscription Status</h2>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-lg font-medium">
+                  <p className={`text-lg font-medium font-poppins ${
+                    isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                  }`}>
                     {subscription.plan === 'free' ? 'Free Plan' : subscription.planDetails?.name}
                   </p>
-                  <p className="text-gray-600">
+                  <p className={`font-jost ${
+                    isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                  }`}>
                     Status: {subscription.status}
                   </p>
                   {subscription.endDate && (
-                    <p className="text-gray-600">
+                    <p className={`font-jost ${
+                      isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                    }`}>
                       Expires: {formatDate(subscription.endDate)}
                     </p>
                   )}
                 </div>
                 {subscription.plan !== 'free' && (
-                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    isDarkMode 
+                      ? "bg-[#10B981] text-[#0A0A0A]" 
+                      : "bg-[#DCFCE7] text-[#16A34A]"
+                  }`}>
                     Active
                   </span>
                 )}
@@ -435,21 +463,35 @@ const Dashboard: React.FC = () => {
           )}
 
           {/* Add Domain */}
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Add New Domain</h2>
+          <div className={`rounded-lg shadow p-6 mb-8 border transition-colors duration-200 ${
+            isDarkMode 
+              ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+              : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+          }`}>
+            <h2 className={`text-xl font-semibold mb-4 font-poppins ${
+              isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+            }`}>Add New Domain</h2>
             <div className="flex">
               <input
                 type="text"
                 value={newDomain}
                 onChange={(e) => setNewDomain(e.target.value)}
                 placeholder="Enter domain name (e.g., yourdomain.com)"
-                className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`flex-1 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-colors ${
+                  isDarkMode 
+                    ? "border-[#404040] bg-[#262626] text-[#FAFAFA] placeholder-[#8A8A8A]" 
+                    : "border-[#D4D4D4] bg-[#FFFFFF] text-[#0A0A0A] placeholder-[#737373]"
+                }`}
                 onKeyDown={(e) => e.key === "Enter" && handleAddDomain()}
               />
               <button
                 onClick={handleAddDomain}
                 disabled={addingDomain}
-                className="bg-blue-600 text-white px-6 py-2 rounded-r-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                className={`px-6 py-2 rounded-r-lg transition-colors font-medium ${
+                  addingDomain 
+                    ? "bg-[#737373] text-[#FAFAFA] cursor-not-allowed" 
+                    : "bg-[#3B82F6] text-[#FAFAFA] hover:bg-[#2563EB]"
+                }`}
               >
                 {addingDomain ? "Adding..." : "Add Domain"}
               </button>
@@ -458,11 +500,19 @@ const Dashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Domains List */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Your Domains</h2>
+            <div className={`rounded-lg shadow p-6 border transition-colors duration-200 ${
+              isDarkMode 
+                ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+                : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+            }`}>
+              <h2 className={`text-xl font-semibold mb-4 font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>Your Domains</h2>
               
               {domains.length === 0 ? (
-                <p className="text-gray-500">No domains found. Add your first domain!</p>
+                <p className={`font-jost ${
+                  isDarkMode ? "text-[#8A8A8A]" : "text-[#737373]"
+                }`}>No domains found. Add your first domain!</p>
               ) : (
                 <div className="space-y-4">
                   {domains.map((domain) => (
@@ -470,26 +520,38 @@ const Dashboard: React.FC = () => {
                       key={domain._id}
                       className={`border rounded-lg p-4 cursor-pointer transition-colors ${
                         selectedDomain?._id === domain._id 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? isDarkMode
+                            ? 'border-[#3B82F6] bg-[#1E3A8A]' 
+                            : 'border-[#3B82F6] bg-[#EFF6FF]'
+                          : isDarkMode
+                            ? 'border-[#404040] hover:border-[#525252] bg-[#262626]' 
+                            : 'border-[#E5E5E5] hover:border-[#D4D4D4] bg-[#FFFFFF]'
                       }`}
                       onClick={() => handleDomainSelect(domain)}
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-lg font-mono font-bold text-gray-800">
+                        <span className={`text-lg font-mono font-bold font-poppins ${
+                          isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                        }`}>
                           {domain.domain}
                         </span>
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                           domain.isVerified 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-yellow-100 text-yellow-800"
+                            ? isDarkMode
+                              ? "bg-[#10B981] text-[#0A0A0A]" 
+                              : "bg-[#DCFCE7] text-[#16A34A]"
+                            : isDarkMode
+                              ? "bg-[#F59E0B] text-[#0A0A0A]" 
+                              : "bg-[#FEF3C7] text-[#D97706]"
                         }`}>
                           {domain.isVerified ? "Verified" : "Pending Verification"}
                         </span>
                       </div>
                       
                       <div className="flex justify-between items-center">
-                        <div className="text-sm text-gray-500">
+                        <div className={`text-sm font-jost ${
+                          isDarkMode ? "text-[#8A8A8A]" : "text-[#737373]"
+                        }`}>
                           <span>Created: {formatDate(domain.createdAt)}</span>
                           <span className="mx-2">•</span>
                           <span>Emails: {domain.emails.length}</span>
@@ -497,11 +559,15 @@ const Dashboard: React.FC = () => {
                         
                         <div className="flex gap-2">
                           <button 
-                            className={`px-3 py-1 rounded text-sm font-medium ${
+                            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                               domain.isVerified
-                                ? "bg-gray-100 text-gray-800"
-                                : "bg-green-600 hover:bg-green-700 text-white"
-                            } disabled:bg-gray-300`}
+                                ? isDarkMode
+                                  ? "bg-[#404040] text-[#D4D4D4] cursor-not-allowed"
+                                  : "bg-[#F5F5F5] text-[#737373] cursor-not-allowed"
+                                : isDarkMode
+                                  ? "bg-[#10B981] hover:bg-[#059669] text-[#0A0A0A]"
+                                  : "bg-[#10B981] hover:bg-[#059669] text-[#FAFAFA]"
+                            }`}
                             disabled={domain.isVerified || verifying[domain._id]}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -512,7 +578,11 @@ const Dashboard: React.FC = () => {
                           </button>
                           
                           <button 
-                            className="px-3 py-1 rounded text-sm font-medium bg-red-600 hover:bg-red-700 text-white"
+                            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                              isDarkMode
+                                ? "bg-[#EF4444] hover:bg-[#DC2626] text-[#FAFAFA]"
+                                : "bg-[#EF4444] hover:bg-[#DC2626] text-[#FAFAFA]"
+                            }`}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveDomain(domain);
@@ -529,8 +599,14 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Email Prefixes */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">
+            <div className={`rounded-lg shadow p-6 border transition-colors duration-200 ${
+              isDarkMode 
+                ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+                : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+            }`}>
+              <h2 className={`text-xl font-semibold mb-4 font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>
                 Email Prefixes {selectedDomain && `- ${selectedDomain.domain}`}
               </h2>
               
@@ -543,7 +619,11 @@ const Dashboard: React.FC = () => {
                         value={newPrefix}
                         onChange={(e) => setNewPrefix(e.target.value)}
                         placeholder="Prefix (e.g., founder)"
-                        className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className={`flex-1 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-colors ${
+                          isDarkMode 
+                            ? "border-[#404040] bg-[#262626] text-[#FAFAFA] placeholder-[#8A8A8A]" 
+                            : "border-[#D4D4D4] bg-[#FFFFFF] text-[#0A0A0A] placeholder-[#737373]"
+                        }`}
                       />
                       <div className="flex-1 relative">
                         <input
@@ -551,11 +631,19 @@ const Dashboard: React.FC = () => {
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           placeholder="Password"
-                          className="w-full border border-gray-300 rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className={`w-full rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-colors ${
+                            isDarkMode 
+                              ? "border-[#404040] bg-[#262626] text-[#FAFAFA] placeholder-[#8A8A8A]" 
+                              : "border-[#D4D4D4] bg-[#FFFFFF] text-[#0A0A0A] placeholder-[#737373]"
+                          }`}
                         />
                         <button
                           type="button"
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          className={`absolute right-2 top-1/2 transform -translate-y-1/2 transition-colors ${
+                            isDarkMode 
+                              ? "text-[#8A8A8A] hover:text-[#D4D4D4]" 
+                              : "text-[#737373] hover:text-[#404040]"
+                          }`}
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -563,7 +651,11 @@ const Dashboard: React.FC = () => {
                       </div>
                       <button
                         onClick={handleAddEmailPrefix}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                        className={`px-4 py-2 rounded transition-colors font-medium ${
+                          isDarkMode
+                            ? "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                            : "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                        }`}
                       >
                         Add
                       </button>
@@ -572,18 +664,32 @@ const Dashboard: React.FC = () => {
 
                   <div className="space-y-2">
                     {emailPrefixes.map((email, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                        <span className="font-mono">{email.fullEmail}</span>
+                      <div key={index} className={`flex justify-between items-center p-3 rounded transition-colors ${
+                        isDarkMode 
+                          ? "bg-[#262626] border-[#404040]" 
+                          : "bg-[#F5F5F5] border-[#E5E5E5]"
+                      } border`}>
+                        <span className={`font-mono font-poppins ${
+                          isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                        }`}>{email.fullEmail}</span>
                         <div className="flex gap-2">
                           <button
                             onClick={() => navigate(`/compose?from=${encodeURIComponent(email.fullEmail)}`)}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
+                            className={`text-sm transition-colors font-medium ${
+                              isDarkMode
+                                ? "text-[#3B82F6] hover:text-[#60A5FA]"
+                                : "text-[#3B82F6] hover:text-[#2563EB]"
+                            }`}
                           >
                             Compose
                           </button>
                           <button
                             onClick={() => handleRemoveEmailPrefix(email.prefix)}
-                            className="text-red-600 hover:text-red-800 text-sm"
+                            className={`text-sm transition-colors font-medium ${
+                              isDarkMode
+                                ? "text-[#EF4444] hover:text-[#F87171]"
+                                : "text-[#EF4444] hover:text-[#DC2626]"
+                            }`}
                           >
                             Remove
                           </button>
@@ -593,28 +699,60 @@ const Dashboard: React.FC = () => {
                   </div>
                 </>
               ) : (
-                <p className="text-gray-500">Select a domain to manage email prefixes</p>
+                <p className={`font-jost ${
+                  isDarkMode ? "text-[#8A8A8A]" : "text-[#737373]"
+                }`}>Select a domain to manage email prefixes</p>
               )}
             </div>
           </div>
 
           {/* Domain Analytics */}
           {selectedDomain && domainAnalytics && (
-            <div className="bg-white rounded-lg shadow p-6 mt-8">
-              <h2 className="text-xl font-semibold mb-4">Domain Analytics - {selectedDomain.domain}</h2>
+            <div className={`rounded-lg shadow p-6 mt-8 border transition-colors duration-200 ${
+              isDarkMode 
+                ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+                : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+            }`}>
+              <h2 className={`text-xl font-semibold mb-4 font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>Domain Analytics - {selectedDomain.domain}</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="text-lg font-semibold text-blue-800">Total Emails</h3>
-                  <p className="text-2xl font-bold text-blue-600">{domainAnalytics.totalEmails}</p>
+                <div className={`p-4 rounded-lg border transition-colors ${
+                  isDarkMode 
+                    ? "bg-[#1E3A8A] border-[#3B82F6] text-[#FAFAFA]" 
+                    : "bg-[#EFF6FF] border-[#3B82F6] text-[#1E40AF]"
+                }`}>
+                  <h3 className={`text-lg font-semibold font-poppins ${
+                    isDarkMode ? "text-[#93C5FD]" : "text-[#1E40AF]"
+                  }`}>Total Emails</h3>
+                  <p className={`text-2xl font-bold font-poppins ${
+                    isDarkMode ? "text-[#FAFAFA]" : "text-[#1E40AF]"
+                  }`}>{domainAnalytics.totalEmails}</p>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h3 className="text-lg font-semibold text-green-800">Sent</h3>
-                  <p className="text-2xl font-bold text-green-600">{domainAnalytics.sentEmails}</p>
+                <div className={`p-4 rounded-lg border transition-colors ${
+                  isDarkMode 
+                    ? "bg-[#064E3B] border-[#10B981] text-[#FAFAFA]" 
+                    : "bg-[#ECFDF5] border-[#10B981] text-[#065F46]"
+                }`}>
+                  <h3 className={`text-lg font-semibold font-poppins ${
+                    isDarkMode ? "text-[#6EE7B7]" : "text-[#065F46]"
+                  }`}>Sent</h3>
+                  <p className={`text-2xl font-bold font-poppins ${
+                    isDarkMode ? "text-[#FAFAFA]" : "text-[#065F46]"
+                  }`}>{domainAnalytics.sentEmails}</p>
                 </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h3 className="text-lg font-semibold text-purple-800">Received</h3>
-                  <p className="text-2xl font-bold text-purple-600">{domainAnalytics.receivedEmails}</p>
+                <div className={`p-4 rounded-lg border transition-colors ${
+                  isDarkMode 
+                    ? "bg-[#581C87] border-[#8B5CF6] text-[#FAFAFA]" 
+                    : "bg-[#F3E8FF] border-[#8B5CF6] text-[#6B21A8]"
+                }`}>
+                  <h3 className={`text-lg font-semibold font-poppins ${
+                    isDarkMode ? "text-[#C4B5FD]" : "text-[#6B21A8]"
+                  }`}>Received</h3>
+                  <p className={`text-2xl font-bold font-poppins ${
+                    isDarkMode ? "text-[#FAFAFA]" : "text-[#6B21A8]"
+                  }`}>{domainAnalytics.receivedEmails}</p>
                 </div>
               </div>
 
@@ -633,23 +771,35 @@ const Dashboard: React.FC = () => {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No email activity data available for this domain yet.</p>
-                  <p className="text-sm mt-2">Send or receive emails to see analytics here.</p>
+                <div className={`text-center py-8 ${
+                  isDarkMode ? "text-[#8A8A8A]" : "text-[#737373]"
+                }`}>
+                  <p className="font-jost">No email activity data available for this domain yet.</p>
+                  <p className="text-sm mt-2 font-jost">Send or receive emails to see analytics here.</p>
                 </div>
               )}
             </div>
           )}
 
           {/* Email Analytics */}
-          <div className="bg-white rounded-lg shadow p-6 mt-8">
-            <h2 className="text-xl font-semibold mb-4">Email Analytics</h2>
+          <div className={`rounded-lg shadow p-6 mt-8 border transition-colors duration-200 ${
+            isDarkMode 
+              ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+              : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+          }`}>
+            <h2 className={`text-xl font-semibold mb-4 font-poppins ${
+              isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+            }`}>Email Analytics</h2>
             
             <div className="mb-4 flex gap-4 items-center">
               <select
                 value={selectedEmail}
                 onChange={(e) => setSelectedEmail(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-colors ${
+                  isDarkMode 
+                    ? "border-[#404040] bg-[#262626] text-[#FAFAFA]" 
+                    : "border-[#D4D4D4] bg-[#FFFFFF] text-[#0A0A0A]"
+                }`}
               >
                 <option value="">Select Email Address</option>
                 {emailPrefixes.map((email, index) => (
@@ -662,7 +812,11 @@ const Dashboard: React.FC = () => {
               <select
                 value={analyticsPeriod}
                 onChange={(e) => setAnalyticsPeriod(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-colors ${
+                  isDarkMode 
+                    ? "border-[#404040] bg-[#262626] text-[#FAFAFA]" 
+                    : "border-[#D4D4D4] bg-[#FFFFFF] text-[#0A0A0A]"
+                }`}
               >
                 <option value="1day">Last 24 Hours</option>
                 <option value="7days">Last 7 Days</option>
@@ -675,7 +829,11 @@ const Dashboard: React.FC = () => {
               {selectedEmail && (
                 <button
                   onClick={() => loadAnalytics(selectedEmail, analyticsPeriod)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                  className={`px-4 py-2 rounded transition-colors font-medium ${
+                    isDarkMode
+                      ? "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                      : "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                  }`}
                 >
                   Load Analytics
                 </button>
@@ -685,17 +843,41 @@ const Dashboard: React.FC = () => {
             {analytics && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-blue-800">Total Emails</h3>
-                    <p className="text-2xl font-bold text-blue-600">{analytics.totalEmails}</p>
+                  <div className={`p-4 rounded-lg border transition-colors ${
+                    isDarkMode 
+                      ? "bg-[#1E3A8A] border-[#3B82F6] text-[#FAFAFA]" 
+                      : "bg-[#EFF6FF] border-[#3B82F6] text-[#1E40AF]"
+                  }`}>
+                    <h3 className={`text-lg font-semibold font-poppins ${
+                      isDarkMode ? "text-[#93C5FD]" : "text-[#1E40AF]"
+                    }`}>Total Emails</h3>
+                    <p className={`text-2xl font-bold font-poppins ${
+                      isDarkMode ? "text-[#FAFAFA]" : "text-[#1E40AF]"
+                    }`}>{analytics.totalEmails}</p>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-green-800">Sent</h3>
-                    <p className="text-2xl font-bold text-green-600">{analytics.sentEmails}</p>
+                  <div className={`p-4 rounded-lg border transition-colors ${
+                    isDarkMode 
+                      ? "bg-[#064E3B] border-[#10B981] text-[#FAFAFA]" 
+                      : "bg-[#ECFDF5] border-[#10B981] text-[#065F46]"
+                  }`}>
+                    <h3 className={`text-lg font-semibold font-poppins ${
+                      isDarkMode ? "text-[#6EE7B7]" : "text-[#065F46]"
+                    }`}>Sent</h3>
+                    <p className={`text-2xl font-bold font-poppins ${
+                      isDarkMode ? "text-[#FAFAFA]" : "text-[#065F46]"
+                    }`}>{analytics.sentEmails}</p>
                   </div>
-                  <div className="bg-purple-50 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-purple-800">Received</h3>
-                    <p className="text-2xl font-bold text-purple-600">{analytics.receivedEmails}</p>
+                  <div className={`p-4 rounded-lg border transition-colors ${
+                    isDarkMode 
+                      ? "bg-[#581C87] border-[#8B5CF6] text-[#FAFAFA]" 
+                      : "bg-[#F3E8FF] border-[#8B5CF6] text-[#6B21A8]"
+                  }`}>
+                    <h3 className={`text-lg font-semibold font-poppins ${
+                      isDarkMode ? "text-[#C4B5FD]" : "text-[#6B21A8]"
+                    }`}>Received</h3>
+                    <p className={`text-2xl font-bold font-poppins ${
+                      isDarkMode ? "text-[#FAFAFA]" : "text-[#6B21A8]"
+                    }`}>{analytics.receivedEmails}</p>
                   </div>
                 </div>
 
@@ -717,17 +899,29 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Send Email */}
-          <div className="bg-white rounded-lg shadow p-6 mt-8">
+          <div className={`rounded-lg shadow p-6 mt-8 border transition-colors duration-200 ${
+            isDarkMode 
+              ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+              : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+          }`}>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Send Email</h2>
+              <h2 className={`text-xl font-semibold font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>Send Email</h2>
               <button
                 onClick={() => navigate('/compose')}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                className={`px-4 py-2 rounded transition-colors font-medium ${
+                  isDarkMode
+                    ? "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                    : "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                }`}
               >
                 Compose Email
               </button>
             </div>
-            <p className="text-gray-600">
+            <p className={`font-jost ${
+              isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+            }`}>
               Click "Compose Email" to create and send a new email from your verified domains.
             </p>
           </div>
@@ -737,9 +931,17 @@ const Dashboard: React.FC = () => {
       {/* OTP Modal */}
       {showOtpModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold mb-4">Verify Email Deletion</h3>
-            <p className="text-gray-600 mb-4">
+          <div className={`rounded-lg p-6 w-full max-w-md mx-4 border transition-colors ${
+            isDarkMode 
+              ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+              : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+          }`}>
+            <h3 className={`text-lg font-semibold mb-4 font-poppins ${
+              isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+            }`}>Verify Email Deletion</h3>
+            <p className={`mb-4 font-jost ${
+              isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+            }`}>
               We'll send an OTP to your email to confirm the deletion of <strong>{otpEmail}</strong>
             </p>
             
@@ -747,19 +949,29 @@ const Dashboard: React.FC = () => {
               <button
                 onClick={handleSendOtp}
                 disabled={otpLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+                className={`w-full py-2 rounded transition-colors font-medium ${
+                  otpLoading 
+                    ? "bg-[#737373] text-[#FAFAFA] cursor-not-allowed" 
+                    : "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                }`}
               >
                 {otpLoading ? "Sending..." : "Send OTP"}
               </button>
               
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Enter OTP</label>
+                <label className={`block text-sm font-medium font-poppins ${
+                  isDarkMode ? "text-[#D4D4D4]" : "text-[#404040]"
+                }`}>Enter OTP</label>
                 <input
                   type="text"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
                   placeholder="Enter 6-digit OTP"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-colors ${
+                    isDarkMode 
+                      ? "border-[#404040] bg-[#262626] text-[#FAFAFA] placeholder-[#8A8A8A]" 
+                      : "border-[#D4D4D4] bg-[#FFFFFF] text-[#0A0A0A] placeholder-[#737373]"
+                  }`}
                   maxLength={6}
                 />
               </div>
@@ -768,7 +980,11 @@ const Dashboard: React.FC = () => {
                 <button
                   onClick={handleVerifyOtpAndDelete}
                   disabled={otpLoading || !otpCode.trim()}
-                  className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 disabled:bg-gray-400"
+                  className={`flex-1 py-2 rounded transition-colors font-medium ${
+                    otpLoading || !otpCode.trim()
+                      ? "bg-[#737373] text-[#FAFAFA] cursor-not-allowed" 
+                      : "bg-[#EF4444] hover:bg-[#DC2626] text-[#FAFAFA]"
+                  }`}
                 >
                   {otpLoading ? "Verifying..." : "Delete Email"}
                 </button>
@@ -778,7 +994,11 @@ const Dashboard: React.FC = () => {
                     setOtpCode("");
                     setOtpEmail("");
                   }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
+                  className={`flex-1 py-2 rounded transition-colors font-medium ${
+                    isDarkMode
+                      ? "bg-[#404040] hover:bg-[#525252] text-[#FAFAFA]"
+                      : "bg-[#D4D4D4] hover:bg-[#A3A3A3] text-[#0A0A0A]"
+                  }`}
                 >
                   Cancel
                 </button>
@@ -791,9 +1011,17 @@ const Dashboard: React.FC = () => {
       {/* Domain Deletion OTP Modal */}
       {showDomainOtpModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold mb-4">Verify Domain Deletion</h3>
-            <p className="text-gray-600 mb-4">
+          <div className={`rounded-lg p-6 w-full max-w-md mx-4 border transition-colors ${
+            isDarkMode 
+              ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+              : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+          }`}>
+            <h3 className={`text-lg font-semibold mb-4 font-poppins ${
+              isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+            }`}>Verify Domain Deletion</h3>
+            <p className={`mb-4 font-jost ${
+              isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+            }`}>
               We'll send an OTP to your email to confirm the deletion of domain <strong>{domainToDelete?.domain}</strong>
             </p>
             
@@ -801,19 +1029,29 @@ const Dashboard: React.FC = () => {
               <button
                 onClick={handleSendDomainOtp}
                 disabled={domainOtpLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+                className={`w-full py-2 rounded transition-colors font-medium ${
+                  domainOtpLoading 
+                    ? "bg-[#737373] text-[#FAFAFA] cursor-not-allowed" 
+                    : "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                }`}
               >
                 {domainOtpLoading ? "Sending..." : "Send OTP"}
               </button>
               
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Enter OTP</label>
+                <label className={`block text-sm font-medium font-poppins ${
+                  isDarkMode ? "text-[#D4D4D4]" : "text-[#404040]"
+                }`}>Enter OTP</label>
                 <input
                   type="text"
                   value={domainOtpCode}
                   onChange={(e) => setDomainOtpCode(e.target.value)}
                   placeholder="Enter 6-digit OTP"
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-colors ${
+                    isDarkMode 
+                      ? "border-[#404040] bg-[#262626] text-[#FAFAFA] placeholder-[#8A8A8A]" 
+                      : "border-[#D4D4D4] bg-[#FFFFFF] text-[#0A0A0A] placeholder-[#737373]"
+                  }`}
                   maxLength={6}
                 />
               </div>
@@ -822,7 +1060,11 @@ const Dashboard: React.FC = () => {
                 <button
                   onClick={handleVerifyDomainOtpAndDelete}
                   disabled={domainOtpLoading || !domainOtpCode.trim()}
-                  className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 disabled:bg-gray-400"
+                  className={`flex-1 py-2 rounded transition-colors font-medium ${
+                    domainOtpLoading || !domainOtpCode.trim()
+                      ? "bg-[#737373] text-[#FAFAFA] cursor-not-allowed" 
+                      : "bg-[#EF4444] hover:bg-[#DC2626] text-[#FAFAFA]"
+                  }`}
                 >
                   {domainOtpLoading ? "Verifying..." : "Delete Domain"}
                 </button>
@@ -832,7 +1074,11 @@ const Dashboard: React.FC = () => {
                     setDomainOtpCode("");
                     setDomainToDelete(null);
                   }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
+                  className={`flex-1 py-2 rounded transition-colors font-medium ${
+                    isDarkMode
+                      ? "bg-[#404040] hover:bg-[#525252] text-[#FAFAFA]"
+                      : "bg-[#D4D4D4] hover:bg-[#A3A3A3] text-[#0A0A0A]"
+                  }`}
                 >
                   Cancel
                 </button>
