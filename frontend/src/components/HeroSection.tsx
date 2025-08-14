@@ -10,11 +10,21 @@ export default function HeroSection() {
       isDarkMode 
         ? "bg-[#0A0A0A] text-[#FAFAFA]" 
         : "bg-[#FAFAFA] text-[#0A0A0A]"
-    } min-h-screen transition-colors duration-200`}>
+    } min-h-screen transition-colors duration-200 relative overflow-hidden`}>
+      {/* Grid Background */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(${isDarkMode ? '#404040' : '#D4D4D4'} 1px, transparent 1px),
+            linear-gradient(90deg, ${isDarkMode ? '#404040' : '#D4D4D4'} 1px, transparent 1px)
+          `,
+          backgroundSize: '20px 20px'
+        }}></div>
+      </div>
 
 
       {/* Main Hero Content */}
-      <div className="max-w-6xl mx-auto px-8 lg:px-16 pt-20 pb-16">
+      <div className="max-w-6xl mx-auto px-8 lg:px-16 pt-20 pb-16 relative z-10">
         {/* Hero Text */}
         <div className="text-center mb-16">
           <h1 className="text-5xl lg:text-6xl font-bold leading-tight mb-6 font-poppins">

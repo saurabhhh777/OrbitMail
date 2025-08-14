@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import { userAuthStore } from "../../store/userAuthStore";
 
 const faqs = [
   {
@@ -30,43 +31,66 @@ const faqs = [
 ];
 
 export default function FAQSection() {
+  const { isDarkMode } = userAuthStore();
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
 
   const toggleIndex = (index: number) =>
     setActiveIndex(activeIndex === index ? null : index);
 
   return (
-    <section className="bg-gray-50 py-20 px-6" id="faq">
+    <section className={`py-20 px-6 transition-colors duration-200 ${
+      isDarkMode ? "bg-[#0A0A0A]" : "bg-[#FAFAFA]"
+    }`} id="faq">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-16">
-          <p className="text-sm font-medium text-gray-500 mb-4 tracking-wider uppercase">
+          <p className={`text-sm font-medium mb-4 tracking-wider uppercase font-poppins ${
+            isDarkMode ? "text-[#8A8A8A]" : "text-[#737373]"
+          }`}>
             TRUSTED BY
           </p>
-          <h2 className="text-4xl font-light text-black mb-2 tracking-tight font-poppins">
+          <h2 className={`text-4xl font-light mb-2 tracking-tight font-poppins ${
+            isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+          }`}>
             Frequently
           </h2>
-          <h2 className="text-4xl font-light text-black tracking-tight font-poppins">
+          <h2 className={`text-4xl font-light tracking-tight font-poppins ${
+            isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+          }`}>
             Asked Questions
           </h2>
         </div>
 
-        <div className="space-y-1 font-poppins">
+        <div className="space-y-1">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="bg-white border-b border-gray-200 last:border-b-0"
+              className={`border-b last:border-b-0 transition-colors duration-200 ${
+                isDarkMode 
+                  ? "bg-[#171717] border-[#262626]" 
+                  : "bg-[#FFFFFF] border-[#E5E5E5]"
+              }`}
             >
               <button
                 onClick={() => toggleIndex(index)}
-                className="w-full flex justify-between items-center py-6 px-6 text-left hover:bg-gray-50 transition-colors duration-200"
+                className={`w-full flex justify-between items-center py-6 px-6 text-left transition-colors duration-200 ${
+                  isDarkMode 
+                    ? "hover:bg-[#262626]" 
+                    : "hover:bg-[#F5F5F5]"
+                }`}
               >
-                <span className="font-medium text-black text-lg pr-4">
+                <span className={`font-medium text-lg pr-4 font-poppins ${
+                  isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                }`}>
                   {faq.question}
                 </span>
                 {activeIndex === index ? (
-                  <Minus className="w-5 h-5 text-black flex-shrink-0" />
+                  <Minus className={`w-5 h-5 flex-shrink-0 ${
+                    isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                  }`} />
                 ) : (
-                  <Plus className="w-5 h-5 text-black flex-shrink-0" />
+                  <Plus className={`w-5 h-5 flex-shrink-0 ${
+                    isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                  }`} />
                 )}
               </button>
 
@@ -75,7 +99,9 @@ export default function FAQSection() {
                   activeIndex === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                 }`}
               >
-                <div className="px-6 pb-6 text-gray-600 leading-relaxed">
+                <div className={`px-6 pb-6 leading-relaxed font-jost ${
+                  isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                }`}>
                   {faq.answer}
                 </div>
               </div>

@@ -17,7 +17,7 @@ interface Plans {
 }
 
 const Pricing: React.FC = () => {
-  const { getSubscriptionPlans, getUserSubscription, createPaymentOrder, verifyPayment, isLogined } = userAuthStore();
+  const { getSubscriptionPlans, getUserSubscription, createPaymentOrder, verifyPayment, isLogined, isDarkMode } = userAuthStore();
   const navigate = useNavigate();
   const [plans, setPlans] = useState<Plans | null>(null);
   const [userSubscription, setUserSubscription] = useState<any>(null);
@@ -147,49 +147,75 @@ const Pricing: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={`min-h-screen ${
+        isDarkMode ? "bg-[#0A0A0A]" : "bg-[#FAFAFA]"
+      }`}>
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
+            isDarkMode ? "border-[#3B82F6]" : "border-[#3B82F6]"
+          }`}></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-200 ${
+      isDarkMode ? "bg-[#0A0A0A]" : "bg-[#FAFAFA]"
+    }`}>
       <Navbar />
       <Toaster />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className={`text-4xl font-bold mb-4 font-poppins ${
+            isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+          }`}>
             Choose Your Plan
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className={`text-xl font-jost ${
+            isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+          }`}>
             Start with our free plan and upgrade as you grow
           </p>
         </div>
 
         {/* Current Subscription Status - Only show if logged in */}
         {isLogined && userSubscription && (
-          <div className="mb-8 bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-semibold mb-4">Current Subscription</h2>
+          <div className={`mb-8 rounded-lg shadow p-6 border transition-colors duration-200 ${
+            isDarkMode 
+              ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+              : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+          }`}>
+            <h2 className={`text-2xl font-semibold mb-4 font-poppins ${
+              isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+            }`}>Current Subscription</h2>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-lg font-medium">
+                <p className={`text-lg font-medium font-poppins ${
+                  isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                }`}>
                   {userSubscription.plan === 'free' ? 'Free Plan' : userSubscription.planDetails?.name}
                 </p>
-                <p className="text-gray-600">
+                <p className={`font-jost ${
+                  isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                }`}>
                   Status: {userSubscription.status}
                 </p>
                 {userSubscription.endDate && (
-                  <p className="text-gray-600">
+                  <p className={`font-jost ${
+                    isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                  }`}>
                     Expires: {new Date(userSubscription.endDate).toLocaleDateString()}
                   </p>
                 )}
               </div>
               {userSubscription.plan !== 'free' && (
-                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  isDarkMode 
+                    ? "bg-[#10B981] text-[#0A0A0A]" 
+                    : "bg-[#DCFCE7] text-[#16A34A]"
+                }`}>
                   Active
                 </span>
               )}
@@ -200,39 +226,61 @@ const Pricing: React.FC = () => {
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-8">
           {/* Free Plan */}
-          <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-gray-200">
+          <div className={`rounded-lg shadow-lg p-8 border-2 transition-colors duration-200 ${
+            isDarkMode 
+              ? "bg-[#171717] border-[#404040] text-[#FAFAFA]" 
+              : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+          }`}>
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
-              <div className="text-4xl font-bold text-gray-900 mb-4">
+              <h3 className={`text-2xl font-bold mb-2 font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>Free</h3>
+              <div className={`text-4xl font-bold mb-4 font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>
                 ₹0
-                <span className="text-lg font-normal text-gray-600">/month</span>
+                <span className={`text-lg font-normal font-jost ${
+                  isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                }`}>/month</span>
               </div>
-              <p className="text-gray-600 mb-6">Perfect for getting started</p>
+              <p className={`mb-6 font-jost ${
+                isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+              }`}>Perfect for getting started</p>
             </div>
             
             <ul className="space-y-3 mb-8">
               <li className="flex items-center">
-                <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-[#10B981] mr-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                2 email addresses per domain
+                <span className={`font-jost ${
+                  isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                }`}>2 email addresses per domain</span>
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-[#10B981] mr-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                Basic email forwarding
+                <span className={`font-jost ${
+                  isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                }`}>Basic email forwarding</span>
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-[#10B981] mr-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                Community support
+                <span className={`font-jost ${
+                  isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                }`}>Community support</span>
               </li>
             </ul>
             
             <button
-              className="w-full bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium cursor-not-allowed"
+              className={`w-full py-3 px-6 rounded-lg font-medium cursor-not-allowed transition-colors ${
+                isDarkMode
+                  ? "bg-[#404040] text-[#8A8A8A]"
+                  : "bg-[#F5F5F5] text-[#737373]"
+              }`}
               disabled
             >
               Current Plan
@@ -241,26 +289,44 @@ const Pricing: React.FC = () => {
 
           {/* Basic Plan */}
           {plans?.basic && (
-            <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500 relative">
-              <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-lg text-sm font-medium">
+            <div className={`rounded-lg shadow-lg p-8 border-2 relative transition-colors duration-200 ${
+              isDarkMode 
+                ? "bg-[#171717] border-[#3B82F6] text-[#FAFAFA]" 
+                : "bg-[#FFFFFF] border-[#3B82F6] text-[#0A0A0A]"
+            }`}>
+              <div className={`absolute top-0 right-0 px-4 py-1 rounded-bl-lg text-sm font-medium ${
+                isDarkMode 
+                  ? "bg-[#3B82F6] text-[#FAFAFA]" 
+                  : "bg-[#3B82F6] text-[#FAFAFA]"
+              }`}>
                 Popular
               </div>
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plans.basic.name}</h3>
-                <div className="text-4xl font-bold text-gray-900 mb-4">
+                <h3 className={`text-2xl font-bold mb-2 font-poppins ${
+                  isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                }`}>{plans.basic.name}</h3>
+                <div className={`text-4xl font-bold mb-4 font-poppins ${
+                  isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                }`}>
                   ₹{plans.basic.price}
-                  <span className="text-lg font-normal text-gray-600">/month</span>
+                  <span className={`text-lg font-normal font-jost ${
+                    isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                  }`}>/month</span>
                 </div>
-                <p className="text-gray-600 mb-6">Great for small teams</p>
+                <p className={`mb-6 font-jost ${
+                  isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                }`}>Great for small teams</p>
               </div>
               
               <ul className="space-y-3 mb-8">
                 {plans.basic.features.map((feature, index) => (
                   <li key={index} className="flex items-center">
-                    <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-[#10B981] mr-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    {feature}
+                    <span className={`font-jost ${
+                      isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                    }`}>{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -268,7 +334,11 @@ const Pricing: React.FC = () => {
               <button
                 onClick={() => handleSubscribe('basic')}
                 disabled={selectedPlan === 'basic'}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-3 px-6 rounded-lg font-medium transition-colors"
+                className={`w-full py-3 px-6 rounded-lg font-medium transition-colors font-poppins ${
+                  selectedPlan === 'basic'
+                    ? "bg-[#737373] text-[#FAFAFA] cursor-not-allowed"
+                    : "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                }`}
               >
                 {selectedPlan === 'basic' ? 'Processing...' : 'Subscribe to Basic'}
               </button>
@@ -277,23 +347,37 @@ const Pricing: React.FC = () => {
 
           {/* Premium Plan */}
           {plans?.premium && (
-            <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-gray-200">
+            <div className={`rounded-lg shadow-lg p-8 border-2 transition-colors duration-200 ${
+              isDarkMode 
+                ? "bg-[#171717] border-[#404040] text-[#FAFAFA]" 
+                : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+            }`}>
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{plans.premium.name}</h3>
-                <div className="text-4xl font-bold text-gray-900 mb-4">
+                <h3 className={`text-2xl font-bold mb-2 font-poppins ${
+                  isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                }`}>{plans.premium.name}</h3>
+                <div className={`text-4xl font-bold mb-4 font-poppins ${
+                  isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+                }`}>
                   ₹{plans.premium.price}
-                  <span className="text-lg font-normal text-gray-600">/month</span>
+                  <span className={`text-lg font-normal font-jost ${
+                    isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                  }`}>/month</span>
                 </div>
-                <p className="text-gray-600 mb-6">Perfect for growing businesses</p>
+                <p className={`mb-6 font-jost ${
+                  isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                }`}>Perfect for growing businesses</p>
               </div>
               
               <ul className="space-y-3 mb-8">
                 {plans.premium.features.map((feature, index) => (
                   <li key={index} className="flex items-center">
-                    <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-[#10B981] mr-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    {feature}
+                    <span className={`font-jost ${
+                      isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+                    }`}>{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -301,7 +385,11 @@ const Pricing: React.FC = () => {
               <button
                 onClick={() => handleSubscribe('premium')}
                 disabled={selectedPlan === 'premium'}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-3 px-6 rounded-lg font-medium transition-colors"
+                className={`w-full py-3 px-6 rounded-lg font-medium transition-colors font-poppins ${
+                  selectedPlan === 'premium'
+                    ? "bg-[#737373] text-[#FAFAFA] cursor-not-allowed"
+                    : "bg-[#3B82F6] hover:bg-[#2563EB] text-[#FAFAFA]"
+                }`}
               >
                 {selectedPlan === 'premium' ? 'Processing...' : 'Subscribe to Premium'}
               </button>
@@ -311,21 +399,47 @@ const Pricing: React.FC = () => {
 
         {/* FAQ Section */}
         <div className="mt-16">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+          <h2 className={`text-3xl font-bold text-center mb-8 font-poppins ${
+            isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+          }`}>
             Frequently Asked Questions
           </h2>
           <div className="max-w-3xl mx-auto space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-2">Can I upgrade or downgrade my plan?</h3>
-              <p className="text-gray-600">Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.</p>
+            <div className={`rounded-lg shadow p-6 border transition-colors duration-200 ${
+              isDarkMode 
+                ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+                : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-2 font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>Can I upgrade or downgrade my plan?</h3>
+              <p className={`font-jost ${
+                isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+              }`}>Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-2">What payment methods do you accept?</h3>
-              <p className="text-gray-600">We accept all major credit cards, debit cards, and UPI payments through Razorpay.</p>
+            <div className={`rounded-lg shadow p-6 border transition-colors duration-200 ${
+              isDarkMode 
+                ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+                : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-2 font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>What payment methods do you accept?</h3>
+              <p className={`font-jost ${
+                isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+              }`}>We accept all major credit cards, debit cards, and UPI payments through Razorpay.</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-2">Is there a free trial?</h3>
-              <p className="text-gray-600">Yes, you can start with our free plan which includes 2 email addresses per domain.</p>
+            <div className={`rounded-lg shadow p-6 border transition-colors duration-200 ${
+              isDarkMode 
+                ? "bg-[#171717] border-[#262626] text-[#FAFAFA]" 
+                : "bg-[#FFFFFF] border-[#E5E5E5] text-[#0A0A0A]"
+            }`}>
+              <h3 className={`text-lg font-semibold mb-2 font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>Is there a free trial?</h3>
+              <p className={`font-jost ${
+                isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+              }`}>Yes, you can start with our free plan which includes 2 email addresses per domain.</p>
             </div>
           </div>
         </div>

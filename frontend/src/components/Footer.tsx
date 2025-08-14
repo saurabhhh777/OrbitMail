@@ -1,10 +1,18 @@
 import { Github, Mail, Twitter, Linkedin } from "lucide-react";
 import Logo from "../assets/android-chrome-192x192.png";
+import { userAuthStore } from "../../store/userAuthStore";
 
 export default function Footer() {
+  const { isDarkMode } = userAuthStore();
   return (
-    <footer className="text-black px-6 md:px-12 py-16 border-black bg-[#f3f4f6] rounded-2xl">
-      <div className="max-w-7xl mx-auto bg-[#f3f4f6] rounded-2xl">
+    <footer className={`px-6 md:px-12 py-16 rounded-2xl transition-colors duration-200 ${
+      isDarkMode 
+        ? "text-[#FAFAFA] border-[#262626] bg-[#171717]" 
+        : "text-[#0A0A0A] border-[#E5E5E5] bg-[#F5F5F5]"
+    } border`}>
+      <div className={`max-w-7xl mx-auto rounded-2xl transition-colors duration-200 ${
+        isDarkMode ? "bg-[#171717]" : "bg-[#F5F5F5]"
+      }`}>
         <div className="grid md:grid-cols-5 gap-10">
           {/* Branding & Social */}
           <div className="md:col-span-2">
@@ -17,9 +25,13 @@ export default function Footer() {
                 />
               </div>
 
-              <h2 className="text-2xl font-bold text-black">OrbitMail</h2>
+              <h2 className={`text-2xl font-bold font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>OrbitMail</h2>
             </div>
-            <p className="max-w-xs text-gray-600 mb-6">
+            <p className={`max-w-xs mb-6 font-jost ${
+              isDarkMode ? "text-[#A3A3A3]" : "text-[#525252]"
+            }`}>
               Professional email on your domain with zero clutter and full
               control.
             </p>
@@ -29,7 +41,11 @@ export default function Footer() {
                 href="https://github.com/your-org/orbitmail"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 border-2 border-black bg-white hover:bg-black hover:text-white flex items-center justify-center transition-colors rounded-2xl"
+                className={`w-10 h-10 border-2 flex items-center justify-center transition-colors rounded-2xl ${
+                  isDarkMode
+                    ? "border-[#525252] bg-[#262626] hover:bg-[#404040] hover:text-[#FAFAFA] text-[#A3A3A3]"
+                    : "border-[#0A0A0A] bg-[#FFFFFF] hover:bg-[#0A0A0A] hover:text-[#FFFFFF] text-[#0A0A0A]"
+                }`}
                 aria-label="GitHub"
               >
                 <Github size={18} />
@@ -38,7 +54,11 @@ export default function Footer() {
                 href="https://twitter.com/orbitmail"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 border-2 border-black bg-white hover:bg-black hover:text-white flex items-center justify-center transition-colors rounded-2xl"
+                className={`w-10 h-10 border-2 flex items-center justify-center transition-colors rounded-2xl ${
+                  isDarkMode
+                    ? "border-[#525252] bg-[#262626] hover:bg-[#404040] hover:text-[#FAFAFA] text-[#A3A3A3]"
+                    : "border-[#0A0A0A] bg-[#FFFFFF] hover:bg-[#0A0A0A] hover:text-[#FFFFFF] text-[#0A0A0A]"
+                }`}
                 aria-label="Twitter"
               >
                 <Twitter size={18} />
@@ -47,14 +67,22 @@ export default function Footer() {
                 href="https://linkedin.com/company/orbitmail"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 border-2 border-black bg-white hover:bg-black hover:text-white flex items-center justify-center transition-colors rounded-2xl"
+                className={`w-10 h-10 border-2 flex items-center justify-center transition-colors rounded-2xl ${
+                  isDarkMode
+                    ? "border-[#525252] bg-[#262626] hover:bg-[#404040] hover:text-[#FAFAFA] text-[#A3A3A3]"
+                    : "border-[#0A0A0A] bg-[#FFFFFF] hover:bg-[#0A0A0A] hover:text-[#FFFFFF] text-[#0A0A0A]"
+                }`}
                 aria-label="LinkedIn"
               >
                 <Linkedin size={18} />
               </a>
               <a
                 href="mailto:support@orbitmail.com"
-                className="w-10 h-10 border-2 border-black bg-white hover:bg-black hover:text-white flex items-center justify-center transition-colors rounded-2xl"
+                className={`w-10 h-10 border-2 flex items-center justify-center transition-colors rounded-2xl ${
+                  isDarkMode
+                    ? "border-[#525252] bg-[#262626] hover:bg-[#404040] hover:text-[#FAFAFA] text-[#A3A3A3]"
+                    : "border-[#0A0A0A] bg-[#FFFFFF] hover:bg-[#0A0A0A] hover:text-[#FFFFFF] text-[#0A0A0A]"
+                }`}
                 aria-label="Email"
               >
                 <Mail size={18} />
@@ -64,12 +92,18 @@ export default function Footer() {
 
           {/* Navigation */}
           <div>
-            <h4 className="font-bold text-black mb-4 text-lg">Product</h4>
+            <h4 className={`font-bold mb-4 text-lg font-poppins ${
+              isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+            }`}>Product</h4>
             <ul className="space-y-3">
               <li>
                 <a
                   href="#features"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   Features
                 </a>
@@ -77,7 +111,11 @@ export default function Footer() {
               <li>
                 <a
                   href="/pricing"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   Pricing
                 </a>
@@ -85,7 +123,11 @@ export default function Footer() {
               <li>
                 <a
                   href="/docs"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   Documentation
                 </a>
@@ -93,7 +135,11 @@ export default function Footer() {
               <li>
                 <a
                   href="#faq"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   FAQs
                 </a>
@@ -103,12 +149,18 @@ export default function Footer() {
 
           {/* Resources */}
           <div>
-            <h4 className="font-bold text-black mb-4 text-lg">Resources</h4>
+            <h4 className={`font-bold mb-4 text-lg font-poppins ${
+              isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+            }`}>Resources</h4>
             <ul className="space-y-3">
               <li>
                 <a
                   href="/blog"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   Blog
                 </a>
@@ -116,7 +168,11 @@ export default function Footer() {
               <li>
                 <a
                   href="/support"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   Support
                 </a>
@@ -124,7 +180,11 @@ export default function Footer() {
               <li>
                 <a
                   href="/roadmap"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   Roadmap
                 </a>
@@ -134,12 +194,18 @@ export default function Footer() {
 
           {/* Legal & Newsletter */}
           <div>
-            <h4 className="font-bold text-black mb-4 text-lg">Legal</h4>
+            <h4 className={`font-bold mb-4 text-lg font-poppins ${
+              isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+            }`}>Legal</h4>
             <ul className="space-y-3 mb-8">
               <li>
                 <a
                   href="/terms"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   Terms of Service
                 </a>
@@ -147,7 +213,11 @@ export default function Footer() {
               <li>
                 <a
                   href="/privacy"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   Privacy Policy
                 </a>
@@ -155,7 +225,11 @@ export default function Footer() {
               <li>
                 <a
                   href="/security"
-                  className="text-gray-600 hover:text-black hover:underline transition-colors"
+                  className={`hover:underline transition-colors font-jost ${
+                    isDarkMode 
+                      ? "text-[#A3A3A3] hover:text-[#FAFAFA]" 
+                      : "text-[#525252] hover:text-[#0A0A0A]"
+                  }`}
                 >
                   Security
                 </a>
@@ -163,16 +237,26 @@ export default function Footer() {
             </ul>
 
             <div className="mt-6">
-              <h4 className="font-bold text-black mb-4 text-lg">
+              <h4 className={`font-bold mb-4 text-lg font-poppins ${
+                isDarkMode ? "text-[#FAFAFA]" : "text-[#0A0A0A]"
+              }`}>
                 Stay Updated
               </h4>
               <div className="flex gap-2">
                 <input
                   type="email"
                   placeholder="Your email"
-                  className="bg-white border-2 border-black px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-gray-400 rounded"
+                  className={`px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-[#3B82F6] rounded transition-colors ${
+                    isDarkMode 
+                      ? "bg-[#262626] border-2 border-[#404040] text-[#FAFAFA] placeholder-[#8A8A8A]" 
+                      : "bg-[#FFFFFF] border-2 border-[#0A0A0A] text-[#0A0A0A] placeholder-[#737373]"
+                  }`}
                 />
-                <button className="bg-black hover:bg-white hover:text-black border-2 border-black text-white px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded">
+                <button className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded border-2 font-poppins ${
+                  isDarkMode
+                    ? "bg-[#0A0A0A] hover:bg-[#262626] border-[#0A0A0A] text-[#FAFAFA]"
+                    : "bg-[#0A0A0A] hover:bg-[#262626] border-[#0A0A0A] text-[#FAFAFA]"
+                }`}>
                   Subscribe
                 </button>
               </div>
@@ -181,8 +265,12 @@ export default function Footer() {
         </div>
 
         {/* Bottom Line */}
-        <div className="mt-16  border-black pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-600 text-sm">
+        <div className={`mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 ${
+          isDarkMode ? "border-[#262626]" : "border-[#E5E5E5]"
+        } border-t`}>
+          <p className={`text-sm font-jost ${
+            isDarkMode ? "text-[#8A8A8A]" : "text-[#737373]"
+          }`}>
             © {new Date().getFullYear()} OrbitMail. All rights reserved.
           </p>
 
