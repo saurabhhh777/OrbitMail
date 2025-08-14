@@ -8,6 +8,8 @@ import {
   addEmailPrefix,
   removeEmailPrefix,
   getEmailPrefixes,
+  sendOtpForEmailDeletion,
+  verifyOtpAndDeleteEmail,
 } from '../controllers/userDomain.controller';
 import { userAuth } from '../middlewares/userAuth.middleware';
 
@@ -26,6 +28,10 @@ router.get('/',userAuth, getallDomains as RequestHandler);
 router.post('/:id/emails', userAuth, addEmailPrefix as unknown as RequestHandler);
 router.delete('/:id/emails/:prefix', userAuth, removeEmailPrefix as unknown as RequestHandler);
 router.get('/:id/emails', userAuth, getEmailPrefixes as unknown as RequestHandler);
+
+// OTP routes for email deletion
+router.post('/send-otp', userAuth, sendOtpForEmailDeletion as unknown as RequestHandler);
+router.post('/verify-otp-delete', userAuth, verifyOtpAndDeleteEmail as unknown as RequestHandler);
 
 
 export default router;

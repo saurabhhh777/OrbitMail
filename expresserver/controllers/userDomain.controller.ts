@@ -108,14 +108,19 @@ export const VerifyMXRec = async (req: Request, res: Response) => {
       const mxRecords = await dns.promises.resolveMx(domainName);
       const mxHosts = mxRecords.map(r => r.exchange.toLowerCase());
 
+      console.log("Found MX hosts:", mxHosts);
+      console.log("Looking for: mx1.orbitmail.fun, mx2.orbitmail.fun, mx3.orbitmail.fun");
+      
       const hasMX1 = mxHosts.includes('mx1.orbitmail.fun');
       const hasMX2 = mxHosts.includes('mx2.orbitmail.fun');
       const hasMX3 = mxHosts.includes('mx3.orbitmail.fun');
       const isVerified = hasMX1 && hasMX2 && hasMX3;
 
+      console.log("MX verification results:", { hasMX1, hasMX2, hasMX3, isVerified });
+
       // Update DB if verified
       if (isVerified) {
-        await userDomainModel.findByIdAndUpdate(
+        const updatedDomain = await userDomainModel.findByIdAndUpdate(
           domainId,
           { 
             isVerified: true,
@@ -123,9 +128,10 @@ export const VerifyMXRec = async (req: Request, res: Response) => {
           },
           { new: true }
         );
+        console.log("Updated domain in DB:", updatedDomain);
       }
 
-      return res.json({
+      const response = {
         domain: domainName,
         mxRecords,
         verified: isVerified,
@@ -135,7 +141,10 @@ export const VerifyMXRec = async (req: Request, res: Response) => {
           !hasMX3 ? 'mx3.orbitmail.fun' : null,
         ].filter(Boolean),
         success: true,
-      });
+      };
+      
+      console.log("Sending response to frontend:", response);
+      return res.json(response);
     } catch (dnsError) {
       console.error("DNS lookup failed:", dnsError);
       return res.status(400).json({
@@ -403,5 +412,116 @@ export const deleteDomain = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Store OTPs temporarily (in production, use Redis or database)
+const otpStore = new Map<string, { otp: string; email: string; expiresAt: number }>();
+
+// Send OTP for email deletion
+export const sendOtpForEmailDeletion = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    const userId = req.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated', success: false });
+    }
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required', success: false });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Store OTP
+    otpStore.set(userId, { otp, email, expiresAt });
+
+    // In a real implementation, send email here
+    // For now, we'll just log it
+    console.log(`OTP for ${email}: ${otp}`);
+    console.log(`Email content: This is your OTP for deleting ${email} from OrbitMail: ${otp}`);
+
+    res.json({
+      message: 'OTP sent successfully',
+      success: true
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', success: false });
+  }
+};
+
+// Verify OTP and delete email
+export const verifyOtpAndDeleteEmail = async (req: Request, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+    const userId = req.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated', success: false });
+    }
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required', success: false });
+    }
+
+    // Get stored OTP
+    const storedData = otpStore.get(userId);
+    if (!storedData) {
+      return res.status(400).json({ message: 'No OTP found. Please request a new one.', success: false });
+    }
+
+    // Check if OTP is expired
+    if (Date.now() > storedData.expiresAt) {
+      otpStore.delete(userId);
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.', success: false });
+    }
+
+    // Check if email matches
+    if (storedData.email !== email) {
+      return res.status(400).json({ message: 'Email mismatch', success: false });
+    }
+
+    // Verify OTP
+    if (storedData.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP', success: false });
+    }
+
+    // Extract domain and prefix from email
+    const [prefix, domainName] = email.split('@');
+    
+    // Find the domain and remove the email
+    const domain = await userDomainModel.findOne({ 
+      domain: domainName, 
+      userId,
+      'emails.prefix': prefix 
+    });
+
+    if (!domain) {
+      return res.status(404).json({ message: 'Email not found', success: false });
+    }
+
+    // Remove the email
+    const emailIndex = domain.emails.findIndex(email => email.prefix === prefix);
+    if (emailIndex === -1) {
+      return res.status(404).json({ message: 'Email not found', success: false });
+    }
+
+    domain.emails.splice(emailIndex, 1);
+    await domain.save();
+
+    // Clear OTP
+    otpStore.delete(userId);
+
+    res.json({
+      message: 'Email deleted successfully',
+      success: true
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', success: false });
   }
 };

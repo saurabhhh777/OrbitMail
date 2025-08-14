@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { userAuthStore } from "../../store/userAuthStore";
 import { Toaster, toast } from "react-hot-toast";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Eye, EyeOff } from 'lucide-react';
 import Navbar from "../components/Navbar";
 
 // Define the domain object type
@@ -55,16 +56,18 @@ const Dashboard: React.FC = () => {
     getEmailPrefixes,
     addEmailPrefix,
     removeEmailPrefix,
+    sendOtpForEmailDeletion,
+    verifyOtpAndDeleteEmail,
     getEmailAnalytics,
     getUserSubscription,
-    sendEmail,
-    getEmails
+    sendEmail
   } = userAuthStore();
   
   const [domains, setDomains] = useState<Domain[]>([]);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [emailPrefixes, setEmailPrefixes] = useState<EmailPrefix[]>([]);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [domainAnalytics, setDomainAnalytics] = useState<any>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [verifying, setVerifying] = useState<{ [key: string]: boolean }>({});
@@ -72,9 +75,14 @@ const Dashboard: React.FC = () => {
   const [newDomain, setNewDomain] = useState<string>("");
   const [newPrefix, setNewPrefix] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [analyticsPeriod, setAnalyticsPeriod] = useState<string>("7days");
   const [selectedEmail, setSelectedEmail] = useState<string>("");
   const [showEmailForm, setShowEmailForm] = useState<boolean>(false);
+  const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
+  const [otpEmail, setOtpEmail] = useState<string>("");
+  const [otpCode, setOtpCode] = useState<string>("");
+  const [otpLoading, setOtpLoading] = useState<boolean>(false);
   const [emailForm, setEmailForm] = useState({
     to: "",
     subject: "",
@@ -129,17 +137,29 @@ const Dashboard: React.FC = () => {
       setVerifying(prev => ({ ...prev, [domainId]: true }));
       const response = await verifyDomain(domainId);
       
-      if (response?.success) {
-        toast.success(`${domainName} is verified`);
-        setDomains(prevDomains => 
-          prevDomains.map(d => 
-            d._id === domainId ? { ...d, isVerified: true } : d
-          )
-        );
+      console.log("Verification response:", response);
+      console.log("Response data:", response?.data);
+      console.log("Success:", response?.data?.success);
+      console.log("Verified:", response?.data?.verified);
+      
+      // Check if verification was successful
+      if (response?.data?.success && response?.data?.verified) {
+        toast.success(`${domainName} is verified successfully!`);
+        // Refresh the domains list to get the updated status from server
+        await fetchData();
+      } else if (response?.data?.success && !response?.data?.verified) {
+        // Domain was checked but not verified
+        const missing = response?.data?.missing || [];
+        if (missing.length > 0) {
+          toast.error(`Domain verification failed. Missing MX records: ${missing.join(', ')}`);
+        } else {
+          toast.error(`Domain verification failed. Please check your MX record configuration.`);
+        }
       } else {
-        toast.error(response?.message || `Failed to verify ${domainName}`);
+        toast.error(response?.data?.message || `Failed to verify ${domainName}`);
       }
     } catch (error: any) {
+      console.error("Verification error:", error);
       toast.error(error.message || `Failed to verify ${domainName}`);
     } finally {
       setVerifying(prev => ({ ...prev, [domainId]: false }));
@@ -200,15 +220,42 @@ const Dashboard: React.FC = () => {
 
   const handleRemoveEmailPrefix = async (prefix: string) => {
     if (!selectedDomain) return;
+    
+    const emailToDelete = `${prefix}@${selectedDomain.domain}`;
+    setOtpEmail(emailToDelete);
+    setShowOtpModal(true);
+  };
+
+  const handleSendOtp = async () => {
+    try {
+      setOtpLoading(true);
+      await sendOtpForEmailDeletion(otpEmail);
+      toast.success("OTP sent to your email. Please check your inbox.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtpAndDelete = async () => {
+    if (!otpCode.trim()) {
+      toast.error("Please enter the OTP");
+      return;
+    }
 
     try {
-      const res = await removeEmailPrefix(selectedDomain._id, prefix);
-      if (res?.success) {
-        toast.success("Email prefix removed successfully");
-        await loadEmailPrefixes(selectedDomain._id);
-      }
+      setOtpLoading(true);
+      await verifyOtpAndDeleteEmail(otpEmail, otpCode);
+      toast.success("Email deleted successfully");
+      setShowOtpModal(false);
+      setOtpCode("");
+      setOtpEmail("");
+      await fetchData();
     } catch (error: any) {
-      toast.error(error.message || "Failed to remove email prefix");
+      toast.error(error.message || "Failed to verify OTP");
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -226,6 +273,7 @@ const Dashboard: React.FC = () => {
   const handleDomainSelect = async (domain: Domain) => {
     setSelectedDomain(domain);
     await loadEmailPrefixes(domain._id);
+    await loadDomainAnalytics(domain._id);
   };
 
   const loadAnalytics = async (email: string, period: string) => {
@@ -236,6 +284,29 @@ const Dashboard: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Error loading analytics:", error);
+    }
+  };
+
+  const loadDomainAnalytics = async (domainId: string) => {
+    try {
+      // Mock domain analytics data for now
+      const mockData = {
+        totalEmails: Math.floor(Math.random() * 1000) + 100,
+        sentEmails: Math.floor(Math.random() * 500) + 50,
+        receivedEmails: Math.floor(Math.random() * 500) + 50,
+        chartData: [
+          { date: 'Mon', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
+          { date: 'Tue', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
+          { date: 'Wed', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
+          { date: 'Thu', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
+          { date: 'Fri', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
+          { date: 'Sat', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
+          { date: 'Sun', sent: Math.floor(Math.random() * 50), received: Math.floor(Math.random() * 50) },
+        ]
+      };
+      setDomainAnalytics(mockData);
+    } catch (error: any) {
+      console.error("Error loading domain analytics:", error);
     }
   };
 
@@ -268,7 +339,7 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
 
   if (loading) {
     return (
@@ -419,13 +490,22 @@ const Dashboard: React.FC = () => {
                         placeholder="Prefix (e.g., founder)"
                         className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Password"
-                        className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <div className="flex-1 relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Password"
+                          className="w-full border border-gray-300 rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                       <button
                         onClick={handleAddEmailPrefix}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
@@ -454,6 +534,42 @@ const Dashboard: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Domain Analytics */}
+          {selectedDomain && domainAnalytics && (
+            <div className="bg-white rounded-lg shadow p-6 mt-8">
+              <h2 className="text-xl font-semibold mb-4">Domain Analytics - {selectedDomain.domain}</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold text-blue-800">Total Emails</h3>
+                  <p className="text-2xl font-bold text-blue-600">{domainAnalytics.totalEmails}</p>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold text-green-800">Sent</h3>
+                  <p className="text-2xl font-bold text-green-600">{domainAnalytics.sentEmails}</p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold text-purple-800">Received</h3>
+                  <p className="text-2xl font-bold text-purple-600">{domainAnalytics.receivedEmails}</p>
+                </div>
+              </div>
+
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={domainAnalytics.chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="sent" stroke="#10B981" strokeWidth={2} />
+                    <Line type="monotone" dataKey="received" stroke="#3B82F6" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
           {/* Email Analytics */}
           <div className="bg-white rounded-lg shadow p-6 mt-8">
@@ -585,6 +701,60 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Verify Email Deletion</h3>
+            <p className="text-gray-600 mb-4">
+              We'll send an OTP to your email to confirm the deletion of <strong>{otpEmail}</strong>
+            </p>
+            
+            <div className="space-y-4">
+              <button
+                onClick={handleSendOtp}
+                disabled={otpLoading}
+                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                {otpLoading ? "Sending..." : "Send OTP"}
+              </button>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Enter OTP</label>
+                <input
+                  type="text"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  placeholder="Enter 6-digit OTP"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={6}
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={handleVerifyOtpAndDelete}
+                  disabled={otpLoading || !otpCode.trim()}
+                  className="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700 disabled:bg-gray-400"
+                >
+                  {otpLoading ? "Verifying..." : "Delete Email"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowOtpModal(false);
+                    setOtpCode("");
+                    setOtpEmail("");
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
