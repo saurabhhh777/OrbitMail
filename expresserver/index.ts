@@ -8,6 +8,7 @@ import emailRouter from "./routes/email.route";
 import userDomainRouter from "./routes/userDomain.route";
 import oauthRouter from "./routes/oauth.route";
 import paymentRouter from "./routes/payment.route";
+import newsletterRouter from "./routes/newsletter.route";
 import connectDB from './config/db';
 import { setupAdminAccount } from './config/admin-setup';
 
@@ -61,6 +62,9 @@ app.use("/api/v1/auth", oauthRouter);
 
 // Payment routes
 app.use("/api/v1/payment", paymentRouter);
+
+// Newsletter routes
+app.use("/api/v1/newsletter", newsletterRouter);
 
 
 

@@ -105,12 +105,6 @@ const Navbar = () => {
             >
               Sign Up
             </Link>
-            <Link
-              to="/admin/login"
-              className="text-[#EF4444] hover:text-[#DC2626] transition-colors font-medium"
-            >
-              Admin
-            </Link>
           </>
         )}
         <div className="flex justify-center">

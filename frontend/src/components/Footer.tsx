@@ -1,9 +1,54 @@
 import { Github, Mail, Twitter, Linkedin } from "lucide-react";
 import Logo from "../assets/android-chrome-192x192.png";
 import { userAuthStore } from "../../store/userAuthStore";
+import { useState } from "react";
+import { toast } from "react-hot-toast";
 
 export default function Footer() {
   const { isDarkMode } = userAuthStore();
+  const [email, setEmail] = useState("");
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setIsSubscribing(true);
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/newsletter/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message || "Successfully subscribed! We'll keep you updated with the latest news.");
+        setEmail("");
+      } else {
+        toast.error(data.message || "Failed to subscribe. Please try again.");
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      toast.error("Failed to subscribe. Please try again.");
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
   return (
     <footer className={`px-6 md:px-12 py-16 rounded-2xl transition-colors duration-200 ${
       isDarkMode 
@@ -242,24 +287,32 @@ export default function Footer() {
               }`}>
                 Stay Updated
               </h4>
-              <div className="flex gap-2">
+              <form onSubmit={handleSubscribe} className="flex gap-2">
                 <input
                   type="email"
                   placeholder="Your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className={`px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-[#3B82F6] rounded transition-colors ${
                     isDarkMode 
                       ? "bg-[#262626] border-2 border-[#404040] text-[#FAFAFA] placeholder-[#8A8A8A]" 
                       : "bg-[#FFFFFF] border-2 border-[#0A0A0A] text-[#0A0A0A] placeholder-[#737373]"
                   }`}
                 />
-                <button className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded border-2 font-poppins ${
-                  isDarkMode
-                    ? "bg-[#0A0A0A] hover:bg-[#262626] border-[#0A0A0A] text-[#FAFAFA]"
-                    : "bg-[#0A0A0A] hover:bg-[#262626] border-[#0A0A0A] text-[#FAFAFA]"
-                }`}>
-                  Subscribe
+                <button 
+                  type="submit"
+                  disabled={isSubscribing}
+                  className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded border-2 font-poppins ${
+                    isSubscribing
+                      ? "bg-[#737373] text-[#FAFAFA] cursor-not-allowed"
+                      : isDarkMode
+                        ? "bg-[#0A0A0A] hover:bg-[#262626] border-[#0A0A0A] text-[#FAFAFA]"
+                        : "bg-[#0A0A0A] hover:bg-[#262626] border-[#0A0A0A] text-[#FAFAFA]"
+                  }`}
+                >
+                  {isSubscribing ? "Subscribing..." : "Subscribe"}
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </div>

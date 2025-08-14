@@ -68,7 +68,7 @@ export default function FAQSection() {
                 isDarkMode 
                   ? "bg-[#171717] border-[#262626]" 
                   : "bg-[#FFFFFF] border-[#E5E5E5]"
-              }`}
+              } ${index === 0 ? 'rounded-t-lg' : ''} ${index === faqs.length - 1 ? 'rounded-b-lg' : ''}`}
             >
               <button
                 onClick={() => toggleIndex(index)}

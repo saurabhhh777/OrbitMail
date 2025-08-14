@@ -12,11 +12,11 @@ export default function HeroSection() {
         : "bg-[#FAFAFA] text-[#0A0A0A]"
     } min-h-screen transition-colors duration-200 relative overflow-hidden`}>
       {/* Grid Background */}
-      <div className="absolute inset-0 opacity-5">
+      <div className="absolute inset-0 opacity-20">
         <div className="absolute inset-0" style={{
           backgroundImage: `
-            linear-gradient(${isDarkMode ? '#404040' : '#D4D4D4'} 1px, transparent 1px),
-            linear-gradient(90deg, ${isDarkMode ? '#404040' : '#D4D4D4'} 1px, transparent 1px)
+            linear-gradient(${isDarkMode ? '#525252' : '#A3A3A3'} 1px, transparent 1px),
+            linear-gradient(90deg, ${isDarkMode ? '#525252' : '#A3A3A3'} 1px, transparent 1px)
           `,
           backgroundSize: '20px 20px'
         }}></div>
@@ -117,17 +117,27 @@ export default function HeroSection() {
           </div>
 
           {/* Email Examples */}
-          <div className={`mt-12 rounded-xl p-8 ${
+          <div className={`mt-12 rounded-xl p-8 relative overflow-hidden ${
             isDarkMode ? "bg-[#262626] border-[#404040]" : "bg-[#F5F5F5] border-[#E5E5E5]"
           } border transition-colors duration-200`}>
-            <div className="text-center mb-6">
+            {/* Grid Background for Card - Lower Opacity */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute inset-0" style={{
+                backgroundImage: `
+                  linear-gradient(${isDarkMode ? '#525252' : '#A3A3A3'} 1px, transparent 1px),
+                  linear-gradient(90deg, ${isDarkMode ? '#525252' : '#A3A3A3'} 1px, transparent 1px)
+                `,
+                backgroundSize: '20px 20px'
+              }}></div>
+            </div>
+            <div className="relative z-10 text-center mb-6">
               <p className={`text-sm mb-2 ${
                 isDarkMode ? "text-[#8A8A8A]" : "text-[#737373]"
               }`}>
                 Show me a list of contacts that haven't signed in the last 10 days
               </p>
             </div>
-            <div className="flex items-center justify-center gap-8 flex-wrap">
+            <div className="relative z-10 flex items-center justify-center gap-8 flex-wrap">
               {["founder@", "team@", "support@", "sales@"].map((prefix, index) => (
                 <div
                   key={index}
@@ -144,7 +154,7 @@ export default function HeroSection() {
                 </div>
               ))}
             </div>
-            <div className="flex justify-center mt-8">
+            <div className="relative z-10 flex justify-center mt-8">
               <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                 isDarkMode 
                   ? "bg-[#FAFAFA] text-[#0A0A0A]" 
