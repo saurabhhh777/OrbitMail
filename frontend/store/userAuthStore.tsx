@@ -449,7 +449,7 @@ export const userAuthStore = create<AuthStore>()(
       // Email methods
       sendEmail: async (emailData: any) => {
         try {
-          const res = await axiosInstance.post("/api/v1/email/sendEmail", emailData, {
+          const res = await axiosInstance.post("/api/v1/email/send", emailData, {
             withCredentials: true
           });
           return res.data;
@@ -461,7 +461,7 @@ export const userAuthStore = create<AuthStore>()(
 
       getEmails: async (userEmail: string) => {
         try {
-          const res = await axiosInstance.get("/api/v1/email/getMail", {
+          const res = await axiosInstance.get("/api/v1/email/get", {
             params: { email: userEmail },
             withCredentials: true
           });
