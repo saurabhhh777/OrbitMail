@@ -21,5 +21,8 @@
     "dotenv": "^16.5.0",
     "mailparser": "^3.7.3",
     "smtp-server": "^3.13.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
   }
 }
